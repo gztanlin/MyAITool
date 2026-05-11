@@ -1,0 +1,24 @@
+{
+  "name": "ai-content-analyzer",
+  "version": "1.0.0",
+  "description": "AI内容分析 - 智能网页内容分析工具",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.16.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
+  },
+  "keywords": [
+    "summarizer",
+    "ai",
+    "url"
+  ],
+  "author": "",
+  "license": "MIT"
+}

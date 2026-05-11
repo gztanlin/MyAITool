@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容分析</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+        .header h1 { font-size: 2.2rem; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            min-height: 120px;
+            resize: vertical;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .form-group textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .loading.show { display: block; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .result-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .result-container.show { display: block; }
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .summary-content {
+            line-height: 1.8;
+            color: #4a5568;
+            font-size: 15px;
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+        }
+        .error-message {
+            display: none;
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .error-message.show { display: block; }
+        .tips {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #2c5282;
+        }
+        .tips h4 { margin-bottom: 5px; color: #2b6cb0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI内容分析</h1>
+            <p>输入网页地址，AI 帮你分析内容要点</p>
+        </div>
+
+        <div class="card">
+            <div class="form-group">
+                <label>🌐 网页地址</label>
+                <input type="url" id="urlInput" placeholder="请输入网页地址，例如：https://example.com">
+            </div>
+
+            <div class="form-group">
+                <label>📝 页面内容（可选，可直接粘贴文本）</label>
+                <textarea id="contentInput" placeholder="如果无法自动抓取网页内容，可以手动粘贴页面文本..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>🎯 分析要求（可选）</label>
+                <textarea id="analysisPrompt" placeholder="请输入您的分析要求，例如：
+- 总结核心要点
+- 提取关键数据
+- 分析文章结构
+- 找出重点结论
+- 生成行动建议
+
+留空则使用默认摘要模式"></textarea>
+            </div>
+
+            <button class="submit-btn" id="submitBtn">开始分析</button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="color: #667eea; font-weight: 500;">AI 正在分析内容，请稍候...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">📊 分析结果</div>
+                <div class="summary-content" id="summaryContent"></div>
+            </div>
+
+            <div class="tips">
+                <h4>📌 使用说明</h4>
+                <p>1. 输入网页URL，系统会自动抓取内容</p>
+                <p>2. 如果自动抓取失败，可以手动粘贴页面文本</p>
+                <p>3. AI（阿里通义千问）会自动分析内容并生成结果</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const contentInput = document.getElementById('contentInput');
+        const analysisPrompt = document.getElementById('analysisPrompt');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultContainer = document.getElementById('resultContainer');
+        const summaryContent = document.getElementById('summaryContent');
+
+        async function summarize() {
+            const url = urlInput.value.trim();
+            const content = contentInput.value.trim();
+            const prompt = analysisPrompt.value.trim();
+
+            if (!url && !content) {
+                showError('请输入网页地址或粘贴页面内容');
+                return;
+            }
+
+            loading.classList.add('show');
+            errorMessage.classList.remove('show');
+            resultContainer.classList.remove('show');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, content, prompt })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '请求失败');
+                }
+
+                summaryContent.textContent = data.summary;
+                resultContainer.classList.add('show');
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.classList.add('show');
+        }
+
+        submitBtn.addEventListener('click', summarize);
+        urlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') summarize(); });
+    </script>
+</body>
+</html>
