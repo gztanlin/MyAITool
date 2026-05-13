@@ -6,11 +6,15 @@
       "instance": 1,
       "internet_access": true,
       "environment": "nodejs18",
-      "command": "npm start",
+      "command": "node server.js",
       "pre_build": "npm install",
       "build_dir": ".",
       "run_env": "custom",
-      "launch_file": "server.js"
+      "launch_file": "server.js",
+      "assets": {
+        "path": ".",
+        "exclude": ["node_modules"]
+      }
     }
   }
 }
