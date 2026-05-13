@@ -2,15 +2,38 @@ export default {
     async fetch(req) {
         const { url, method } = req;
         
-        // 健康检查
-        if (url === '/health' || url === '/') {
+        // 健康检查 - 只匹配 /health
+        if (url === '/health') {
             return new Response(
-                JSON.stringify({ status: 'ok', message: 'Server running', url: url }),
+                JSON.stringify({ status: 'ok', message: 'Server running' }),
                 { headers: { 'Content-Type': 'application/json' } }
             );
         }
         
-        // 主页
+        // API 请求
+        if (url === '/api/summarize' && method === 'POST') {
+            const body = await req.text();
+            
+            return new Response(
+                JSON.stringify({ 
+                    title: '测试标题', 
+                    summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
+                    contentLength: 100,
+                    provider: '测试模式'
+                }),
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        
+        // API GET 测试
+        if (url === '/api/summarize' && method === 'GET') {
+            return new Response(
+                JSON.stringify({ status: 'ok', message: 'API is working' }),
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        
+        // 主页和所有其他请求返回 HTML
         const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -98,22 +121,6 @@ export default {
 </body>
 </html>`;
         
-        // API 请求
-        if (url === '/api/summarize' && method === 'POST') {
-            const body = await req.text();
-            
-            return new Response(
-                JSON.stringify({ 
-                    title: '测试标题', 
-                    summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
-                    contentLength: 100,
-                    provider: '测试模式'
-                }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-        
-        // 所有其他请求返回主页
         return new Response(html, { headers: { 'Content-Type': 'text/html' } });
     }
 };
