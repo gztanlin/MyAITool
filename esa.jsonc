@@ -8,19 +8,18 @@
         "instance_num": 1
       },
       "runtime": {
-        "language": "nodejs",
-        "version": "18",
-        "work_dir": "/code",
-        "command": "node server.js",
-        "pre_start_command": "npm install"
+        "language": "custom-container",
+        "work_dir": "/app",
+        "command": "npm start"
       },
       "code": {
         "path": ".",
         "excludes": ["node_modules", ".git", ".env"]
       },
       "build": {
-        "command": "npm install",
-        "build_dir": "."
+        "command": "docker build -t ai-content-analyzer .",
+        "build_dir": ".",
+        "dockerfile_path": "Dockerfile"
       },
       "network": {
         "internet_access": true
