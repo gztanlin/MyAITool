@@ -1,5 +1,5 @@
 {
-  "name": "ai-content-analyzer",
+  "name": "MyAiTool",
   "version": "1.0.0",
   "description": "AI内容分析 - 智能网页内容分析工具",
   "main": "server.js",
