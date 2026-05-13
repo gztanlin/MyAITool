@@ -10,19 +10,32 @@
       "runtime": {
         "language": "nodejs",
         "version": "18",
-        "work_dir": "/code",
-        "command": "npm start",
-        "pre_start_command": "npm install"
+        "work_dir": "/code"
       },
       "code": {
         "path": ".",
         "excludes": ["node_modules", ".git", ".env"]
       },
+      "build": {
+        "command": "npm install && npm run build",
+        "build_dir": "."
+      },
+      "deploy": {
+        "assets": {
+          "path": ".",
+          "target_path": "/code"
+        },
+        "function": {
+          "handler": "server.js",
+          "runtime": "nodejs18"
+        }
+      },
       "network": {
         "internet_access": true
       },
       "env_vars": {
-        "AI_PROVIDER": "qianwen"
+        "AI_PROVIDER": "qianwen",
+        "PORT": "3000"
       }
     }
   ]
