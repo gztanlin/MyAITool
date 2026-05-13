@@ -3,6 +3,7 @@ const axios = require('axios');
 const https = require('https');
 const cheerio = require('cheerio');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -16,11 +17,12 @@ const httpsAgent = new https.Agent({
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.sendFile('MyAITool.html', { root: __dirname });
-});
-
 app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    const htmlPath = path.join(__dirname, 'MyAITool.html');
+    res.sendFile(htmlPath);
+});
 
 function cleanText(text) {
     return text
