@@ -1,108 +1,138 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
-
-console.log(`\n📋 启动参数:`);
-console.log(`   PORT: ${PORT}`);
-console.log(`   HOST: ${HOST}`);
-console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-console.log(`   当前目录: ${__dirname}\n`);
-
-const server = http.createServer((req, res) => {
-    const fullUrl = `${req.headers.host}${req.url}`;
-    console.log(`\n📡 收到请求:`);
-    console.log(`   方法: ${req.method}`);
-    console.log(`   URL: ${req.url}`);
-    console.log(`   完整地址: ${fullUrl}`);
-    console.log(`   头部:`, JSON.stringify(req.headers).substring(0, 200));
+exports.handler = async (req, res) => {
+    const { method, url } = req;
     
-    // 健康检查
-    if (req.url === '/health' || req.url === '/health/') {
-        console.log('✅ 响应健康检查');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-            status: 'ok', 
-            message: 'Server is running', 
-            timestamp: new Date().toISOString(),
-            port: PORT,
-            host: HOST
-        }));
-        return;
+    if (url === '/health') {
+        return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'ok', message: 'Server running' })
+        };
     }
     
-    // 主页
-    if (req.url === '/' || req.url === '/index.html') {
-        const htmlPath = path.join(__dirname, 'MyAITool.html');
-        console.log(`📄 尝试读取 HTML 文件: ${htmlPath}`);
+    if (url === '/' || url === '/index.html') {
+        const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容分析工具</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; border-radius: 12px; padding: 30px; }
+        h1 { color: #1a73e8; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        textarea { height: 150px; resize: vertical; }
+        button { background: #1a73e8; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #1557b0; }
+        #result { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; display: none; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #1a73e8; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI 内容分析工具</h1>
         
-        fs.readFile(htmlPath, (err, data) => {
-            if (err) {
-                console.error('❌ 读取 HTML 文件失败:', err);
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end('Internal Server Error: ' + err.message);
+        <div class="form-group">
+            <label>📄 网页地址</label>
+            <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
+        </div>
+        
+        <div class="form-group">
+            <label>📝 内容文本</label>
+            <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>🎯 分析要求</label>
+            <textarea id="promptInput" placeholder="请输入分析要求（可选）"></textarea>
+        </div>
+        
+        <button onclick="analyze()">
+            <span class="loading" id="loading" style="display:none"></span>
+            <span id="btnText">开始分析</span>
+        </button>
+        
+        <div id="result">
+            <h3>📊 分析结果</h3>
+            <div id="summary"></div>
+        </div>
+    </div>
+    
+    <script>
+        async function analyze() {
+            const url = document.getElementById('urlInput').value;
+            const content = document.getElementById('contentInput').value;
+            const prompt = document.getElementById('promptInput').value;
+            const loading = document.getElementById('loading');
+            const btnText = document.getElementById('btnText');
+            const result = document.getElementById('result');
+            const summary = document.getElementById('summary');
+            
+            if (!url && !content) {
+                alert('请输入网页地址或内容文本');
                 return;
             }
-            console.log('✅ 成功读取 HTML 文件');
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(data);
-        });
-        return;
-    }
-    
-    // API 请求
-    if (req.url === '/api/summarize' && req.method === 'POST') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
+            
+            loading.style.display = 'inline-block';
+            btnText.textContent = '分析中...';
+            result.style.display = 'none';
+            
             try {
-                const data = JSON.parse(body);
-                console.log('📋 API 请求数据:', JSON.stringify(data).substring(0, 200));
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ 
-                    title: '测试标题', 
-                    summary: '这是一个测试摘要，服务器运行正常！',
-                    contentLength: 100,
-                    provider: '测试模式'
-                }));
-            } catch (err) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, content, prompt })
+                });
+                
+                const data = await response.json();
+                
+                summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary;
+                result.style.display = 'block';
+            } catch (error) {
+                summary.innerHTML = '<strong>❌ 错误:</strong> ' + error.message;
+                result.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                btnText.textContent = '开始分析';
             }
-        });
-        return;
+        }
+    </script>
+</body>
+</html>`;
+        
+        return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'text/html' },
+            body: html
+        };
     }
     
-    // 捕获所有其他请求
-    console.warn(`⚠️ 未找到路由: ${req.url}`);
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ 
-        error: 'Not Found', 
-        path: req.url,
-        message: '请求的资源未找到',
-        availableRoutes: ['/', '/health', '/api/summarize']
-    }));
-});
-
-server.listen(PORT, HOST, () => {
-    console.log(`\n🚀 服务器已成功启动!`);
-    console.log(`📡 监听地址: http://${HOST}:${PORT}`);
-    console.log(`📁 当前目录: ${__dirname}`);
-    console.log(`📄 HTML 文件路径: ${path.join(__dirname, 'MyAITool.html')}`);
-    console.log(`🔧 可用路由: /, /health, /api/summarize`);
-    console.log(`\n✅ 服务器准备就绪，等待请求...\n`);
-});
-
-// 检查 HTML 文件是否存在
-const htmlPath = path.join(__dirname, 'MyAITool.html');
-fs.access(htmlPath, fs.constants.F_OK, (err) => {
-    if (err) {
-        console.error(`❌ HTML 文件不存在: ${htmlPath}`);
-    } else {
-        console.log(`✅ HTML 文件存在: ${htmlPath}`);
+    if (url === '/api/summarize' && method === 'POST') {
+        let body = '';
+        return new Promise((resolve) => {
+            req.on('data', chunk => body += chunk.toString());
+            req.on('end', () => {
+                resolve({
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        title: '测试标题', 
+                        summary: '这是一个测试摘要，服务器运行正常！\\n\\n测试内容：\\n- 功能1：网页内容分析\\n- 功能2：文本内容分析\\n- 功能3：AI智能摘要',
+                        contentLength: 100,
+                        provider: '测试模式'
+                    })
+                });
+            });
+        });
     }
-});
+    
+    return {
+        statusCode: 404,
+        headers: { 'Content-Type': 'text/plain' },
+        body: '404 Not Found'
+    };
+};
