@@ -1,0 +1,41 @@
+{
+  "version": "v2",
+  "services": [
+    {
+      "name": "ai-content-analyzer",
+      "resource": {
+        "instance_type": "ecs.g6.large",
+        "instance_num": 1
+      },
+      "runtime": {
+        "language": "nodejs",
+        "version": "18",
+        "work_dir": "/code",
+        "command": "node server.js",
+        "pre_start_command": "npm install"
+      },
+      "code": {
+        "path": ".",
+        "excludes": ["node_modules", ".git", ".env"]
+      },
+      "build": {
+        "command": "npm install"
+      },
+      "network": {
+        "internet_access": true
+      },
+      "env_vars": {
+        "AI_PROVIDER": "qianwen"
+      },
+      "deploy": {
+        "assets": {
+          "path": ".",
+          "target_path": "/code"
+        },
+        "function": {
+          "handler": "server.js"
+        }
+      }
+    }
+  ]
+}
