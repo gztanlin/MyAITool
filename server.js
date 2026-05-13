@@ -1,18 +1,8 @@
-export default {
-    async fetch(req) {
-        const { url, method } = req;
-        
-        // 健康检查
-        if (url === '/health') {
-            return new Response(
-                JSON.stringify({ status: 'ok', message: 'Server running' }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-        
-        // 主页
-        if (url === '/' || url === '/index.html') {
-            const html = `<!DOCTYPE html>
+const http = require('http');
+
+const PORT = process.env.PORT || 3000;
+
+const HTML = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -104,26 +94,54 @@ export default {
     </script>
 </body>
 </html>`;
-            
-            return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-        }
-        
-        // API 请求
-        if (url === '/api/summarize' && method === 'POST') {
-            const body = await req.text();
-            
-            return new Response(
-                JSON.stringify({ 
-                    title: '测试标题', 
-                    summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
-                    contentLength: 100,
-                    provider: '测试模式'
-                }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-        
-        // 404
-        return new Response('404 Not Found', { status: 404 });
+
+const server = http.createServer((req, res) => {
+    const { method, url } = req;
+    
+    console.log('收到请求:', method, url);
+    
+    // 健康检查 - 多个路径都支持
+    if (url === '/health' || url === '/health/' || url === '/api/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', message: 'Server running' }));
+        return;
     }
-};
+    
+    // 主页 - 多个路径都支持
+    if (url === '/' || url === '/index' || url === '/index.html' || url === '/index.htm' || url === '') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(HTML);
+        return;
+    }
+    
+    // API 请求
+    if (url === '/api/summarize' && method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', () => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                title: '测试标题', 
+                summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
+                contentLength: 100,
+                provider: '测试模式'
+            }));
+        });
+        return;
+    }
+    
+    // API 测试 GET 请求
+    if ((url === '/api/summarize' || url === '/api/test') && method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', message: 'API is working' }));
+        return;
+    }
+    
+    // 所有其他请求返回主页（SPA 模式）
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(HTML);
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('Server running on port ' + PORT);
+});
