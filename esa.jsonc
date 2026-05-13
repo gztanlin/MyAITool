@@ -11,30 +11,18 @@
         "language": "nodejs",
         "version": "18",
         "work_dir": "/code",
-        "command": "node server.js",
+        "command": "npm start",
         "pre_start_command": "npm install"
       },
       "code": {
         "path": ".",
         "excludes": ["node_modules", ".git", ".env"]
       },
-      "build": {
-        "command": "npm install"
-      },
       "network": {
         "internet_access": true
       },
       "env_vars": {
         "AI_PROVIDER": "qianwen"
-      },
-      "deploy": {
-        "assets": {
-          "path": ".",
-          "target_path": "/code"
-        },
-        "function": {
-          "handler": "server.js"
-        }
       }
     }
   ]
