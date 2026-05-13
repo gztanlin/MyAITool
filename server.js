@@ -19,6 +19,10 @@ app.use(express.json());
 
 app.use(express.static(__dirname));
 
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is running', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
     const htmlPath = path.join(__dirname, 'MyAITool.html');
     res.sendFile(htmlPath);
@@ -349,5 +353,7 @@ app.post('/api/summarize', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`\n🚀 AI内容分析服务器已启动!`);
     console.log(`📄 前端页面: http://localhost:${PORT}`);
-    console.log(`💡 提示: 在前端页面配置AI服务商即可使用AI内容分析功能\n`);
+    console.log(`💡 提示: 在前端页面配置AI服务商即可使用AI内容分析功能`);
+    console.log(`📁 当前目录: ${__dirname}`);
+    console.log(`📋 静态文件目录: ${__dirname}\n`);
 });
