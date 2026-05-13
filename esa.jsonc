@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "services": {
+    "ai-content-analyzer": {
+      "dimension": "cpu",
+      "instance": 1,
+      "internet_access": true,
+      "environment": "nodejs18",
+      "command": [
+        "npm",
+        "start"
+      ],
+      "pre_build": [
+        "npm",
+        "install"
+      ]
+    }
+  }
+}
