@@ -1,17 +1,18 @@
-exports.handler = async (req, res) => {
-    const { method, url } = req;
-    
-    if (url === '/health') {
-        return {
-            statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'ok', message: 'Server running' })
-        };
-    }
-    
-    if (url === '/' || url === '/index.html') {
-        const html = `
-<!DOCTYPE html>
+export default {
+    async fetch(req) {
+        const { url, method } = req;
+        
+        // 健康检查
+        if (url === '/health') {
+            return new Response(
+                JSON.stringify({ status: 'ok', message: 'Server running' }),
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        
+        // 主页
+        if (url === '/' || url === '/index.html') {
+            const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -103,36 +104,26 @@ exports.handler = async (req, res) => {
     </script>
 </body>
 </html>`;
+            
+            return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+        }
         
-        return {
-            statusCode: 200,
-            headers: { 'Content-Type': 'text/html' },
-            body: html
-        };
+        // API 请求
+        if (url === '/api/summarize' && method === 'POST') {
+            const body = await req.text();
+            
+            return new Response(
+                JSON.stringify({ 
+                    title: '测试标题', 
+                    summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
+                    contentLength: 100,
+                    provider: '测试模式'
+                }),
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+        
+        // 404
+        return new Response('404 Not Found', { status: 404 });
     }
-    
-    if (url === '/api/summarize' && method === 'POST') {
-        let body = '';
-        return new Promise((resolve) => {
-            req.on('data', chunk => body += chunk.toString());
-            req.on('end', () => {
-                resolve({
-                    statusCode: 200,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        title: '测试标题', 
-                        summary: '这是一个测试摘要，服务器运行正常！\\n\\n测试内容：\\n- 功能1：网页内容分析\\n- 功能2：文本内容分析\\n- 功能3：AI智能摘要',
-                        contentLength: 100,
-                        provider: '测试模式'
-                    })
-                });
-            });
-        });
-    }
-    
-    return {
-        statusCode: 404,
-        headers: { 'Content-Type': 'text/plain' },
-        body: '404 Not Found'
-    };
 };
