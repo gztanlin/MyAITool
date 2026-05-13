@@ -10,7 +10,7 @@
       "runtime": {
         "language": "nodejs",
         "version": "18",
-        "work_dir": "/code/dist",
+        "work_dir": "/code",
         "command": "node server.js",
         "pre_start_command": "npm install"
       },
@@ -18,15 +18,15 @@
         "path": ".",
         "excludes": ["node_modules", ".git", ".env"]
       },
-      "build": {
-        "command": "npm run build",
-        "build_dir": "dist"
-      },
       "network": {
         "internet_access": true
       },
       "env_vars": {
         "AI_PROVIDER": "qianwen"
+      },
+      "assets": {
+        "path": ".",
+        "target_path": "/code"
       }
     }
   ]
