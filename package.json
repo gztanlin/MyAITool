@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'No build step required'"
+    "build": "mkdir -p dist && cp server.js dist/ && cp MyAITool.html dist/ && cp package.json dist/ && cp -r node_modules dist/ 2>/dev/null || xcopy server.js dist\\ /Y && xcopy MyAITool.html dist\\ /Y && xcopy package.json dist\\ /Y && xcopy node_modules dist\\node_modules\\ /E /I /Y 2>NUL"
   },
   "dependencies": {
     "axios": "^1.16.0",

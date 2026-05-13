@@ -1,20 +1,33 @@
 {
-  "version": 1,
-  "services": {
-    "ai-content-analyzer": {
-      "dimension": "cpu",
-      "instance": 1,
-      "internet_access": true,
-      "environment": "nodejs18",
-      "command": "node server.js",
-      "pre_build": "npm install",
-      "build_dir": ".",
-      "run_env": "custom",
-      "launch_file": "server.js",
-      "assets": {
+  "version": "v2",
+  "services": [
+    {
+      "name": "ai-content-analyzer",
+      "resource": {
+        "instance_type": "ecs.g6.large",
+        "instance_num": 1
+      },
+      "runtime": {
+        "language": "nodejs",
+        "version": "18",
+        "work_dir": "/code/dist",
+        "command": "node server.js",
+        "pre_start_command": "npm install"
+      },
+      "code": {
         "path": ".",
-        "exclude": ["node_modules"]
+        "excludes": ["node_modules", ".git", ".env"]
+      },
+      "build": {
+        "command": "npm run build",
+        "build_dir": "dist"
+      },
+      "network": {
+        "internet_access": true
+      },
+      "env_vars": {
+        "AI_PROVIDER": "qianwen"
       }
     }
-  }
+  ]
 }
