@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "AI内容分析 - 智能网页内容分析工具",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
