@@ -39,8 +39,29 @@ export default {
                     let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
                     let inputContent = content || '';
                     
+                    // 如果只有网页地址，先抓取网页内容
                     if (inputUrl && !content) {
-                        userPrompt += `\n\n网页地址：${inputUrl}`;
+                        try {
+                            const pageResponse = await fetch(inputUrl);
+                            const pageText = await pageResponse.text();
+                            
+                            // 提取文本内容（简单处理）
+                            const textContent = pageText
+                                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                                .replace(/<[^>]+>/g, '')
+                                .replace(/\s+/g, ' ')
+                                .trim();
+                            
+                            if (textContent.length > 0) {
+                                inputContent = textContent.substring(0, 5000); // 限制长度
+                                userPrompt += `\n\n网页内容：\n${inputContent}`;
+                            } else {
+                                userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
+                            }
+                        } catch (e) {
+                            userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                        }
                     } else if (content) {
                         userPrompt += `\n\n内容：${content}`;
                     }
