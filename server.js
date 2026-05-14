@@ -33,7 +33,7 @@ export default {
                 
                 // 调用通义千问 API
                 try {
-                    const apiKey = process.env.AI_API_KEY || 'sk-5b0ae74df47a459985325ddeb221bb7e';
+                    const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
                     
                     // 构建提示词
                     let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
