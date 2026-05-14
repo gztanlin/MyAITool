@@ -54,7 +54,7 @@ export default {
                                 .trim();
                             
                             if (textContent.length > 0) {
-                                inputContent = textContent.substring(0, 5000); // 限制长度
+                                inputContent = textContent.substring(0, 20000); // 限制长度
                                 userPrompt += `\n\n网页内容：\n${inputContent}`;
                             } else {
                                 userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
