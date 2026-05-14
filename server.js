@@ -1,138 +1,138 @@
-export default {
-    async fetch(req) {
-        const { url, method } = req;
-        
-        // 解析 URL 路径
-        const urlObj = new URL(url, 'http://localhost');
-        const pathname = urlObj.pathname;
-        
-        // 健康检查
-        if (pathname === '/health') {
-            return new Response(
-                JSON.stringify({ status: 'ok', message: 'Server running' }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-        
-        // API 请求
-        if (pathname === '/api/summarize') {
-            if (method === 'POST') {
-                const body = await req.text();
-                let requestData;
+// EAS HTTP 函数处理逻辑
+async function handleRequest(req) {
+    const { url, method } = req;
+    
+    // 解析 URL 路径
+    const urlObj = new URL(url, 'http://localhost');
+    const pathname = urlObj.pathname;
+    
+    // 健康检查
+    if (pathname === '/health') {
+        return new Response(
+            JSON.stringify({ status: 'ok', message: 'Server running' }),
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+    
+    // API 请求
+    if (pathname === '/api/summarize') {
+        if (method === 'POST') {
+            const body = await req.text();
+            let requestData;
+            
+            try {
+                requestData = JSON.parse(body);
+            } catch (e) {
+                return new Response(
+                    JSON.stringify({ error: 'Invalid JSON' }),
+                    { status: 400, headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+            
+            const { url: inputUrl, content, prompt } = requestData;
+            
+            // 调用通义千问 API
+            try {
+                const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
                 
-                try {
-                    requestData = JSON.parse(body);
-                } catch (e) {
-                    return new Response(
-                        JSON.stringify({ error: 'Invalid JSON' }),
-                        { status: 400, headers: { 'Content-Type': 'application/json' } }
-                    );
+                // 构建提示词
+                let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
+                let inputContent = content || '';
+                
+                // 如果只有网页地址，先抓取网页内容
+                if (inputUrl && !content) {
+                    try {
+                        const pageResponse = await fetch(inputUrl);
+                        const pageText = await pageResponse.text();
+                        
+                        // 提取文本内容（简单处理）
+                        const textContent = pageText
+                            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                            .replace(/<[^>]+>/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        
+                        if (textContent.length > 0) {
+                            inputContent = textContent.substring(0, 20000); // 限制长度
+                            userPrompt += `\n\n网页内容：\n${inputContent}`;
+                        } else {
+                            userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
+                        }
+                    } catch (e) {
+                        userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                    }
+                } else if (content) {
+                    userPrompt += `\n\n内容：${content}`;
                 }
                 
-                const { url: inputUrl, content, prompt } = requestData;
-                
                 // 调用通义千问 API
-                try {
-                    const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
-                    
-                    // 构建提示词
-                    let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
-                    let inputContent = content || '';
-                    
-                    // 如果只有网页地址，先抓取网页内容
-                    if (inputUrl && !content) {
-                        try {
-                            const pageResponse = await fetch(inputUrl);
-                            const pageText = await pageResponse.text();
-                            
-                            // 提取文本内容（简单处理）
-                            const textContent = pageText
-                                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                                .replace(/<[^>]+>/g, '')
-                                .replace(/\s+/g, ' ')
-                                .trim();
-                            
-                            if (textContent.length > 0) {
-                                inputContent = textContent.substring(0, 20000); // 限制长度
-                                userPrompt += `\n\n网页内容：\n${inputContent}`;
-                            } else {
-                                userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
-                            }
-                        } catch (e) {
-                            userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
-                        }
-                    } else if (content) {
-                        userPrompt += `\n\n内容：${content}`;
-                    }
-                    
-                    // 调用通义千问 API
-                    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
+                const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'qwen-turbo',
+                        input: {
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
+                                },
+                                {
+                                    role: 'user',
+                                    content: userPrompt
+                                }
+                            ]
                         },
-                        body: JSON.stringify({
-                            model: 'qwen-turbo',
-                            input: {
-                                messages: [
-                                    {
-                                        role: 'system',
-                                        content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
-                                    },
-                                    {
-                                        role: 'user',
-                                        content: userPrompt
-                                    }
-                                ]
-                            },
-                            parameters: {
-                                result_format: 'message'
-                            }
-                        })
-                    });
+                        parameters: {
+                            result_format: 'message'
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.output && result.output.choices && result.output.choices[0]) {
+                    const aiContent = result.output.choices[0].message.content;
                     
-                    const result = await response.json();
-                    
-                    if (result.output && result.output.choices && result.output.choices[0]) {
-                        const aiContent = result.output.choices[0].message.content;
-                        
-                        return new Response(
-                            JSON.stringify({ 
-                                title: 'AI 分析结果', 
-                                summary: aiContent,
-                                contentLength: inputContent.length,
-                                provider: '通义千问'
-                            }),
-                            { headers: { 'Content-Type': 'application/json' } }
-                        );
-                    } else {
-                        throw new Error('AI API 返回格式错误');
-                    }
-                } catch (error) {
-                    console.error('AI API Error:', error);
                     return new Response(
                         JSON.stringify({ 
-                            title: '错误', 
-                            summary: `AI 分析失败: ${error.message}`,
-                            error: error.message
+                            title: 'AI 分析结果', 
+                            summary: aiContent,
+                            contentLength: inputContent.length,
+                            provider: '通义千问'
                         }),
                         { headers: { 'Content-Type': 'application/json' } }
                     );
+                } else {
+                    throw new Error('AI API 返回格式错误');
                 }
-            }
-            
-            if (method === 'GET') {
+            } catch (error) {
+                console.error('AI API Error:', error);
                 return new Response(
-                    JSON.stringify({ status: 'ok', message: 'API is working' }),
+                    JSON.stringify({ 
+                        title: '错误', 
+                        summary: `AI 分析失败: ${error.message}`,
+                        error: error.message
+                    }),
                     { headers: { 'Content-Type': 'application/json' } }
                 );
             }
         }
         
-        // 主页和所有其他请求返回 HTML
-        const html = `<!DOCTYPE html>
+        if (method === 'GET') {
+            return new Response(
+                JSON.stringify({ status: 'ok', message: 'API is working' }),
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+    }
+    
+    // 主页和所有其他请求返回 HTML
+    const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -223,7 +223,44 @@ export default {
     </script>
 </body>
 </html>`;
-        
-        return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-    }
+    
+    return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+}
+
+// EAS 部署导出
+export default {
+    fetch: handleRequest
 };
+
+// 本地开发服务器 - 使用 Node.js 原生 http 模块
+if (typeof process !== 'undefined' && process.argv[1] && import.meta.url.includes(process.argv[1].replace(/\\/g, '/'))) {
+    import('http').then(({ createServer }) => {
+        const PORT = process.env.PORT || 3000;
+        
+        createServer(async (req, res) => {
+            // 构建类似 EAS 的请求对象
+            const easReq = {
+                url: 'http://localhost' + req.url,
+                method: req.method,
+                text: async () => {
+                    return new Promise((resolve, reject) => {
+                        let body = '';
+                        req.on('data', chunk => body += chunk);
+                        req.on('end', () => resolve(body));
+                        req.on('error', reject);
+                    });
+                }
+            };
+            
+            // 调用处理函数
+            const easRes = await handleRequest(easReq);
+            
+            // 将 EAS Response 转换为 Node.js 响应
+            res.writeHead(easRes.status || 200, easRes.headers);
+            const body = await easRes.text();
+            res.end(body);
+        }).listen(PORT, () => {
+            console.log(`🚀 服务已启动，访问 http://localhost:${PORT}`);
+        });
+    });
+}
