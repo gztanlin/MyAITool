@@ -2,35 +2,46 @@ export default {
     async fetch(req) {
         const { url, method } = req;
         
-        // 健康检查 - 只匹配 /health
-        if (url === '/health') {
+        // 调试：记录请求信息
+        console.log('Request:', method, url);
+        
+        // 解析 URL 路径
+        const urlObj = new URL(url, 'http://localhost');
+        const pathname = urlObj.pathname;
+        
+        console.log('Pathname:', pathname);
+        
+        // 健康检查
+        if (pathname === '/health') {
             return new Response(
-                JSON.stringify({ status: 'ok', message: 'Server running' }),
+                JSON.stringify({ status: 'ok', message: 'Server running', url: url, pathname: pathname }),
                 { headers: { 'Content-Type': 'application/json' } }
             );
         }
         
-        // API 请求
-        if (url === '/api/summarize' && method === 'POST') {
-            const body = await req.text();
+        // API 请求 - 使用 pathname 匹配
+        if (pathname === '/api/summarize') {
+            if (method === 'POST') {
+                const body = await req.text();
+                console.log('API POST body:', body);
+                
+                return new Response(
+                    JSON.stringify({ 
+                        title: '测试标题', 
+                        summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
+                        contentLength: 100,
+                        provider: '测试模式'
+                    }),
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            }
             
-            return new Response(
-                JSON.stringify({ 
-                    title: '测试标题', 
-                    summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
-                    contentLength: 100,
-                    provider: '测试模式'
-                }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-        
-        // API GET 测试
-        if (url === '/api/summarize' && method === 'GET') {
-            return new Response(
-                JSON.stringify({ status: 'ok', message: 'API is working' }),
-                { headers: { 'Content-Type': 'application/json' } }
-            );
+            if (method === 'GET') {
+                return new Response(
+                    JSON.stringify({ status: 'ok', message: 'API is working', url: url, pathname: pathname }),
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            }
         }
         
         // 主页和所有其他请求返回 HTML
@@ -105,7 +116,15 @@ export default {
                     body: JSON.stringify({ url, content, prompt })
                 });
                 
-                const data = await response.json();
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('服务器返回非JSON格式: ' + text.substring(0, 100));
+                }
                 
                 summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary;
                 result.style.display = 'block';
