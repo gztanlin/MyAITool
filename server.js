@@ -161,7 +161,7 @@ export default {
             <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
         </div>
         <div class="form-group">
-            <label>📝 内容文本（可选）</label>
+            <label>📝 内容文本</label>
             <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容"></textarea>
         </div>
         <div class="form-group">
@@ -189,6 +189,11 @@ export default {
             
             if (!url && !content) {
                 alert('请输入网页地址或内容文本');
+                return;
+            }
+            
+            if (url && content) {
+                alert('请只选择网页地址或内容文本，不要同时输入');
                 return;
             }
             
