@@ -2,43 +2,109 @@ export default {
     async fetch(req) {
         const { url, method } = req;
         
-        // 调试：记录请求信息
-        console.log('Request:', method, url);
-        
         // 解析 URL 路径
         const urlObj = new URL(url, 'http://localhost');
         const pathname = urlObj.pathname;
         
-        console.log('Pathname:', pathname);
-        
         // 健康检查
         if (pathname === '/health') {
             return new Response(
-                JSON.stringify({ status: 'ok', message: 'Server running', url: url, pathname: pathname }),
+                JSON.stringify({ status: 'ok', message: 'Server running' }),
                 { headers: { 'Content-Type': 'application/json' } }
             );
         }
         
-        // API 请求 - 使用 pathname 匹配
+        // API 请求
         if (pathname === '/api/summarize') {
             if (method === 'POST') {
                 const body = await req.text();
-                console.log('API POST body:', body);
+                let requestData;
                 
-                return new Response(
-                    JSON.stringify({ 
-                        title: '测试标题', 
-                        summary: '这是一个测试摘要，服务器运行正常！\n\n测试内容：\n- 功能1：网页内容分析\n- 功能2：文本内容分析\n- 功能3：AI智能摘要',
-                        contentLength: 100,
-                        provider: '测试模式'
-                    }),
-                    { headers: { 'Content-Type': 'application/json' } }
-                );
+                try {
+                    requestData = JSON.parse(body);
+                } catch (e) {
+                    return new Response(
+                        JSON.stringify({ error: 'Invalid JSON' }),
+                        { status: 400, headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
+                
+                const { url: inputUrl, content, prompt } = requestData;
+                
+                // 调用通义千问 API
+                try {
+                    const apiKey = process.env.AI_API_KEY || 'sk-5b0ae74df47a459985325ddeb221bb7e';
+                    
+                    // 构建提示词
+                    let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
+                    let inputContent = content || '';
+                    
+                    if (inputUrl && !content) {
+                        userPrompt += `\n\n网页地址：${inputUrl}`;
+                    } else if (content) {
+                        userPrompt += `\n\n内容：${content}`;
+                    }
+                    
+                    // 调用通义千问 API
+                    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'qwen-turbo',
+                            input: {
+                                messages: [
+                                    {
+                                        role: 'system',
+                                        content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
+                                    },
+                                    {
+                                        role: 'user',
+                                        content: userPrompt
+                                    }
+                                ]
+                            },
+                            parameters: {
+                                result_format: 'message'
+                            }
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.output && result.output.choices && result.output.choices[0]) {
+                        const aiContent = result.output.choices[0].message.content;
+                        
+                        return new Response(
+                            JSON.stringify({ 
+                                title: 'AI 分析结果', 
+                                summary: aiContent,
+                                contentLength: inputContent.length,
+                                provider: '通义千问'
+                            }),
+                            { headers: { 'Content-Type': 'application/json' } }
+                        );
+                    } else {
+                        throw new Error('AI API 返回格式错误');
+                    }
+                } catch (error) {
+                    console.error('AI API Error:', error);
+                    return new Response(
+                        JSON.stringify({ 
+                            title: '错误', 
+                            summary: `AI 分析失败: ${error.message}`,
+                            error: error.message
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
             }
             
             if (method === 'GET') {
                 return new Response(
-                    JSON.stringify({ status: 'ok', message: 'API is working', url: url, pathname: pathname }),
+                    JSON.stringify({ status: 'ok', message: 'API is working' }),
                     { headers: { 'Content-Type': 'application/json' } }
                 );
             }
@@ -116,17 +182,9 @@ export default {
                     body: JSON.stringify({ url, content, prompt })
                 });
                 
-                const text = await response.text();
-                console.log('Response text:', text);
+                const data = await response.json();
                 
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    throw new Error('服务器返回非JSON格式: ' + text.substring(0, 100));
-                }
-                
-                summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary;
+                summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
                 result.style.display = 'block';
             } catch (error) {
                 summary.innerHTML = '<strong>❌ 错误:</strong> ' + error.message;
