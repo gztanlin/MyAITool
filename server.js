@@ -161,11 +161,11 @@ export default {
             <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
         </div>
         <div class="form-group">
-            <label>📝 内容文本</label>
+            <label>📝 内容文本（可选）</label>
             <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容"></textarea>
         </div>
         <div class="form-group">
-            <label>🎯 分析要求</label>
+            <label>🎯 分析要求（可选）</label>
             <textarea id="promptInput" placeholder="请输入分析要求（可选）"></textarea>
         </div>
         <button onclick="analyze()">
