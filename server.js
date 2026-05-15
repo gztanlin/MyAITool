@@ -3,8 +3,13 @@ export default {
         const { url, method } = req;
         
         // 解析 URL 路径
-        const urlObj = new URL(url, 'http://localhost');
-        const pathname = urlObj.pathname;
+        let pathname;
+        try {
+            const urlObj = new URL(url, 'http://localhost');
+            pathname = urlObj.pathname;
+        } catch (e) {
+            pathname = url;
+        }
         
         // 健康检查
         if (pathname === '/health') {
@@ -31,6 +36,14 @@ export default {
                 
                 const { url: inputUrl, content, prompt } = requestData;
                 
+                // 验证输入
+                if (!inputUrl && !content) {
+                    return new Response(
+                        JSON.stringify({ error: '请输入网页地址或内容文本' }),
+                        { status: 400, headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
+                
                 // 调用通义千问 API
                 try {
                     const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
@@ -43,6 +56,9 @@ export default {
                     if (inputUrl && !content) {
                         try {
                             const pageResponse = await fetch(inputUrl);
+                            if (!pageResponse.ok) {
+                                throw new Error(`HTTP error! status: ${pageResponse.status}`);
+                            }
                             const pageText = await pageResponse.text();
                             
                             // 提取文本内容（简单处理）
@@ -54,7 +70,7 @@ export default {
                                 .trim();
                             
                             if (textContent.length > 0) {
-                                inputContent = textContent.substring(0, 20000); // 限制长度
+                                inputContent = textContent.substring(0, 20000);
                                 userPrompt += `\n\n网页内容：\n${inputContent}`;
                             } else {
                                 userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
@@ -93,6 +109,12 @@ export default {
                         })
                     });
                     
+                    // 检查 HTTP 状态码
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`API 请求失败: ${response.status} - ${errorText}`);
+                    }
+                    
                     const result = await response.json();
                     
                     if (result.output && result.output.choices && result.output.choices[0]) {
@@ -108,7 +130,7 @@ export default {
                             { headers: { 'Content-Type': 'application/json' } }
                         );
                     } else {
-                        throw new Error('AI API 返回格式错误');
+                        throw new Error('AI API 返回格式错误: ' + JSON.stringify(result));
                     }
                 } catch (error) {
                     console.error('AI API Error:', error);
@@ -151,6 +173,7 @@ export default {
         #result { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; display: none; }
         .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #1a73e8; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #dc3545; }
     </style>
 </head>
 <body>
@@ -208,12 +231,21 @@ export default {
                     body: JSON.stringify({ url, content, prompt })
                 });
                 
+                // 检查 HTTP 状态码
+                if (!response.ok) {
+                    throw new Error('服务器错误: ' + response.status);
+                }
+                
                 const data = await response.json();
                 
-                summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
+                if (data.title === '错误') {
+                    summary.innerHTML = '<strong class="error">❌ ' + data.title + ':</strong> ' + data.summary;
+                } else {
+                    summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
+                }
                 result.style.display = 'block';
             } catch (error) {
-                summary.innerHTML = '<strong>❌ 错误:</strong> ' + error.message;
+                summary.innerHTML = '<strong class="error">❌ 错误:</strong> ' + error.message;
                 result.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
