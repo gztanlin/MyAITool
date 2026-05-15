@@ -2,7 +2,6 @@ export default {
     async fetch(req) {
         const { url, method } = req;
         
-        // 解析 URL 路径
         let pathname;
         try {
             const urlObj = new URL(url, 'http://localhost');
@@ -11,7 +10,6 @@ export default {
             pathname = url;
         }
         
-        // 健康检查
         if (pathname === '/health') {
             return new Response(
                 JSON.stringify({ status: 'ok', message: 'Server running' }),
@@ -19,7 +17,6 @@ export default {
             );
         }
         
-        // API 请求
         if (pathname === '/api/summarize') {
             if (method === 'POST') {
                 let body;
@@ -42,55 +39,60 @@ export default {
                     );
                 }
                 
-                const { url: inputUrl, content, prompt } = requestData;
+                const { mode, url: inputUrl, content, prompt, question } = requestData;
                 
-                // 验证输入
-                if (!inputUrl && !content) {
-                    return new Response(
-                        JSON.stringify({ error: '请输入网页地址或内容文本' }),
-                        { status: 400, headers: { 'Content-Type': 'application/json' } }
-                    );
-                }
-                
-                // 调用通义千问 API
                 try {
                     const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
+                    let userPrompt = '';
                     
-                    // 构建提示词
-                    let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
-                    let inputContent = content || '';
-                    
-                    // 如果只有网页地址，先抓取网页内容
-                    if (inputUrl && !content) {
-                        try {
-                            const pageResponse = await fetch(inputUrl);
-                            if (!pageResponse.ok) {
-                                throw new Error(`HTTP error! status: ${pageResponse.status}`);
-                            }
-                            const pageText = await pageResponse.text();
-                            
-                            // 提取文本内容（简单处理）
-                            const textContent = pageText
-                                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                                .replace(/<[^>]+>/g, '')
-                                .replace(/\s+/g, ' ')
-                                .trim();
-                            
-                            if (textContent.length > 0) {
-                                inputContent = textContent.substring(0, 20000);
-                                userPrompt += `\n\n网页内容：\n${inputContent}`;
-                            } else {
-                                userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
-                            }
-                        } catch (e) {
-                            userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                    if (mode === 'chat') {
+                        if (!question) {
+                            return new Response(
+                                JSON.stringify({ error: '请输入问题' }),
+                                { status: 400, headers: { 'Content-Type': 'application/json' } }
+                            );
                         }
-                    } else if (content) {
-                        userPrompt += `\n\n内容：${content}`;
+                        userPrompt = question;
+                    } else {
+                        if (!inputUrl && !content) {
+                            return new Response(
+                                JSON.stringify({ error: '请输入网页地址或内容文本' }),
+                                { status: 400, headers: { 'Content-Type': 'application/json' } }
+                            );
+                        }
+                        
+                        let inputContent = content || '';
+                        userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
+                        
+                        if (inputUrl && !content) {
+                            try {
+                                const pageResponse = await fetch(inputUrl);
+                                if (!pageResponse.ok) {
+                                    throw new Error(`HTTP error! status: ${pageResponse.status}`);
+                                }
+                                const pageText = await pageResponse.text();
+                                
+                                const textContent = pageText
+                                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                                    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                                    .replace(/<[^>]+>/g, '')
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
+                                
+                                if (textContent.length > 0) {
+                                    inputContent = textContent.substring(0, 20000);
+                                    userPrompt += `\n\n网页内容：\n${inputContent}`;
+                                } else {
+                                    userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
+                                }
+                            } catch (e) {
+                                userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                            }
+                        } else if (content) {
+                            userPrompt += `\n\n内容：${content}`;
+                        }
                     }
                     
-                    // 调用通义千问 API（带超时控制）
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 25000);
                     
@@ -108,7 +110,9 @@ export default {
                                     messages: [
                                         {
                                             role: 'system',
-                                            content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
+                                            content: mode === 'chat' 
+                                                ? '你是一个专业的AI助手，擅长回答各种问题。请用简洁、准确的语言回答。'
+                                                : '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
                                         },
                                         {
                                             role: 'user',
@@ -132,7 +136,6 @@ export default {
                     
                     clearTimeout(timeoutId);
                     
-                    // 获取响应内容
                     const responseText = await response.text();
                     const contentType = response.headers.get('content-type') || '';
                     
@@ -140,7 +143,6 @@ export default {
                     console.log('API Content-Type:', contentType);
                     console.log('Response starts with:', responseText.substring(0, 50));
                     
-                    // 检查 HTTP 状态码
                     if (!response.ok) {
                         let errorMsg = `API 请求失败: ${response.status}`;
                         if (responseText && responseText.length < 500) {
@@ -158,12 +160,10 @@ export default {
                         throw new Error(errorMsg);
                     }
                     
-                    // 检查响应是否可能是 HTML
                     if (responseText.trim().startsWith('<')) {
                         throw new Error('API 返回了 HTML 内容，不是预期的 JSON 响应');
                     }
                     
-                    // 尝试解析 JSON
                     let result;
                     try {
                         result = JSON.parse(responseText);
@@ -176,10 +176,10 @@ export default {
                         
                         return new Response(
                             JSON.stringify({ 
-                                title: 'AI 分析结果', 
+                                title: mode === 'chat' ? 'AI 回答' : 'AI 分析结果', 
                                 summary: aiContent,
-                                contentLength: inputContent.length,
-                                provider: '通义千问'
+                                provider: '通义千问',
+                                mode: mode
                             }),
                             { headers: { 'Content-Type': 'application/json' } }
                         );
@@ -207,20 +207,19 @@ export default {
             }
         }
         
-        // 主页和所有其他请求返回 HTML
         const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI内容分析工具</title>
+    <title>我的AI工具</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
         .container { background: #f5f5f5; border-radius: 12px; padding: 30px; }
         h1 { color: #1a73e8; text-align: center; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         textarea { height: 150px; resize: vertical; }
         button { background: #1a73e8; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
         button:hover { background: #1557b0; }
@@ -228,78 +227,128 @@ export default {
         .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #1a73e8; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .error { color: #dc3545; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 AI 内容分析工具</h1>
+        <h1>🤖 我的AI工具</h1>
         <div class="form-group">
-            <label>📄 网页地址</label>
-            <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
+            <label>选择模式</label>
+            <select id="modeSelect" onchange="toggleMode()">
+                <option value="analyze">内容分析</option>
+                <option value="chat">AI问答</option>
+            </select>
         </div>
-        <div class="form-group">
-            <label>📝 内容文本</label>
-            <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容"></textarea>
+        
+        <div id="analyzeMode">
+            <div class="form-group">
+                <label>📄 网页地址</label>
+                <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
+            </div>
+            <div class="form-group">
+                <label>📝 内容文本</label>
+                <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容"></textarea>
+            </div>
+            <div class="form-group">
+                <label>🎯 分析要求（可选）</label>
+                <textarea id="promptInput" placeholder="请输入分析要求（可选）"></textarea>
+            </div>
         </div>
-        <div class="form-group">
-            <label>🎯 分析要求（可选）</label>
-            <textarea id="promptInput" placeholder="请输入分析要求（可选）"></textarea>
+        
+        <div id="chatMode" class="hidden">
+            <div class="form-group">
+                <label>💬 你的问题</label>
+                <textarea id="questionInput" placeholder="请输入你想问的问题"></textarea>
+            </div>
         </div>
+        
         <button onclick="analyze()">
             <span class="loading" id="loading" style="display:none"></span>
-            <span id="btnText">开始分析</span>
+            <span id="btnText">提交</span>
         </button>
         <div id="result">
-            <h3>📊 分析结果</h3>
+            <h3>📊 结果</h3>
             <div id="summary"></div>
         </div>
     </div>
     <script>
+        function toggleMode() {
+            const mode = document.getElementById('modeSelect').value;
+            const analyzeMode = document.getElementById('analyzeMode');
+            const chatMode = document.getElementById('chatMode');
+            const result = document.getElementById('result');
+            const btnText = document.getElementById('btnText');
+            
+            if (mode === 'chat') {
+                analyzeMode.classList.add('hidden');
+                chatMode.classList.remove('hidden');
+                btnText.textContent = '提问';
+            } else {
+                analyzeMode.classList.remove('hidden');
+                chatMode.classList.add('hidden');
+                btnText.textContent = '开始分析';
+            }
+            result.style.display = 'none';
+        }
+        
         async function analyze() {
-            const url = document.getElementById('urlInput').value;
-            const content = document.getElementById('contentInput').value;
-            const prompt = document.getElementById('promptInput').value;
+            const mode = document.getElementById('modeSelect').value;
             const loading = document.getElementById('loading');
             const btnText = document.getElementById('btnText');
             const result = document.getElementById('result');
             const summary = document.getElementById('summary');
             
-            if (!url && !content) {
-                alert('请输入网页地址或内容文本');
-                return;
-            }
+            let requestData = { mode };
             
-            if (url && content) {
-                alert('请只选择网页地址或内容文本，不要同时输入');
-                return;
+            if (mode === 'chat') {
+                const question = document.getElementById('questionInput').value;
+                if (!question) {
+                    alert('请输入问题');
+                    return;
+                }
+                requestData.question = question;
+            } else {
+                const url = document.getElementById('urlInput').value;
+                const content = document.getElementById('contentInput').value;
+                const prompt = document.getElementById('promptInput').value;
+                
+                if (!url && !content) {
+                    alert('请输入网页地址或内容文本');
+                    return;
+                }
+                
+                if (url && content) {
+                    alert('请只选择网页地址或内容文本，不要同时输入');
+                    return;
+                }
+                
+                requestData.url = url;
+                requestData.content = content;
+                requestData.prompt = prompt;
             }
             
             loading.style.display = 'inline-block';
-            btnText.textContent = '分析中...';
+            btnText.textContent = mode === 'chat' ? '思考中...' : '分析中...';
             result.style.display = 'none';
             
             try {
                 const response = await fetch('/api/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, content, prompt })
+                    body: JSON.stringify(requestData)
                 });
                 
-                // 检查 HTTP 状态码
                 if (!response.ok) {
                     throw new Error('服务器错误: ' + response.status);
                 }
                 
-                // 获取响应内容并检查类型
                 const responseText = await response.text();
-                const contentType = response.headers.get('content-type');
                 
-                // 检查是否为 HTML
                 if (responseText.trim().startsWith('<')) {
                     throw new Error('服务器返回了 HTML 内容，不是预期的 JSON');
                 }
                 
-                // 尝试解析 JSON
                 let data;
                 try {
                     data = JSON.parse(responseText);
@@ -310,7 +359,7 @@ export default {
                 if (data.title === '错误') {
                     summary.innerHTML = '<strong class="error">❌ ' + data.title + ':</strong> ' + data.summary;
                 } else {
-                    summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>摘要:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
+                    summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>结果:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
                 }
                 result.style.display = 'block';
             } catch (error) {
@@ -318,7 +367,7 @@ export default {
                 result.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
-                btnText.textContent = '开始分析';
+                btnText.textContent = mode === 'chat' ? '提问' : '开始分析';
             }
         }
     </script>
