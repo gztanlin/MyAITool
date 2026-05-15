@@ -367,6 +367,38 @@ export default {
         .mode-content {
             transition: all 0.3s ease;
         }
+        .tip-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 1px solid #667eea30;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .tip-box .tip-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        .tip-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .tip-box li {
+            margin-bottom: 4px;
+        }
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-top: 35px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .footer .brand {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
@@ -381,6 +413,17 @@ export default {
         <input type="hidden" id="modeSelect" value="analyze">
         
         <div id="analyzeMode" class="mode-content">
+            <div class="tip-box">
+                <div class="tip-title">💡 内容分析可以做什么</div>
+                <ul>
+                    <li>提取文章标题和核心要点</li>
+                    <li>生成简洁摘要</li>
+                    <li>分析新闻事件</li>
+                    <li>总结产品介绍</li>
+                    <li>提取关键数据和结论</li>
+                </ul>
+            </div>
+            
             <div class="form-group">
                 <label>📄 网页地址</label>
                 <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
@@ -396,6 +439,17 @@ export default {
         </div>
         
         <div id="chatMode" class="mode-content hidden">
+            <div class="tip-box">
+                <div class="tip-title">💡 AI问答可以做什么</div>
+                <ul>
+                    <li>解答各类问题</li>
+                    <li>提供建议和方案</li>
+                    <li>解释概念和原理</li>
+                    <li>协助写作和创作</li>
+                    <li>代码编写和调试</li>
+                </ul>
+            </div>
+            
             <div class="form-group">
                 <label>💬 你的问题</label>
                 <textarea id="questionInput" placeholder="请输入你想问的问题" style="height: 120px;"></textarea>
@@ -410,6 +464,11 @@ export default {
         <div id="result" class="result-card">
             <h3 id="resultTitle">📊 分析结果</h3>
             <div id="summary" class="result-content"></div>
+        </div>
+        
+        <div class="footer">
+            <div class="brand">BY TANLIN 时间@2026</div>
+            <div>AI 服务由通义千问提供</div>
         </div>
     </div>
     <script>
