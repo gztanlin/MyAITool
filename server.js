@@ -506,8 +506,8 @@ export default {
         <h1>🤖 我的AI工具</h1>
         
         <div class="mode-tabs">
-            <div class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</div>
             <div class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</div>
+            <div class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</div>
         </div>
         
         <input type="hidden" id="modeSelect" value="chat">
