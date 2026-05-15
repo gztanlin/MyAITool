@@ -90,32 +90,47 @@ export default {
                         userPrompt += `\n\n内容：${content}`;
                     }
                     
-                    // 调用通义千问 API
-                    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
-                        },
-                        body: JSON.stringify({
-                            model: 'qwen-turbo',
-                            input: {
-                                messages: [
-                                    {
-                                        role: 'system',
-                                        content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
-                                    },
-                                    {
-                                        role: 'user',
-                                        content: userPrompt
-                                    }
-                                ]
+                    // 调用通义千问 API（带超时控制）
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 25000);
+                    
+                    let response;
+                    try {
+                        response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
                             },
-                            parameters: {
-                                result_format: 'message'
-                            }
-                        })
-                    });
+                            body: JSON.stringify({
+                                model: 'qwen-turbo',
+                                input: {
+                                    messages: [
+                                        {
+                                            role: 'system',
+                                            content: '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
+                                        },
+                                        {
+                                            role: 'user',
+                                            content: userPrompt
+                                        }
+                                    ]
+                                },
+                                parameters: {
+                                    result_format: 'message'
+                                }
+                            }),
+                            signal: controller.signal
+                        });
+                    } catch (fetchError) {
+                        clearTimeout(timeoutId);
+                        if (fetchError.name === 'AbortError') {
+                            throw new Error('AI 分析超时（超过25秒），请尝试简化分析要求或减少内容长度');
+                        }
+                        throw fetchError;
+                    }
+                    
+                    clearTimeout(timeoutId);
                     
                     // 获取响应内容
                     const responseText = await response.text();
@@ -129,7 +144,6 @@ export default {
                     if (!response.ok) {
                         let errorMsg = `API 请求失败: ${response.status}`;
                         if (responseText && responseText.length < 500) {
-                            // 如果是 HTML，提取错误信息
                             if (responseText.trim().startsWith('<')) {
                                 const match = responseText.match(/<title[^>]*>([^<]+)<\/title>/i);
                                 if (match) {
@@ -147,11 +161,6 @@ export default {
                     // 检查响应是否可能是 HTML
                     if (responseText.trim().startsWith('<')) {
                         throw new Error('API 返回了 HTML 内容，不是预期的 JSON 响应');
-                    }
-                    
-                    // 检查 Content-Type 是否表明是 JSON
-                    if (!contentType.includes('application/json') && !contentType.includes('text/plain')) {
-                        console.warn('Unexpected Content-Type:', contentType);
                     }
                     
                     // 尝试解析 JSON
