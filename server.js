@@ -117,22 +117,41 @@ export default {
                         })
                     });
                     
+                    // 获取响应内容
+                    const responseText = await response.text();
+                    const contentType = response.headers.get('content-type') || '';
+                    
+                    console.log('API Response Status:', response.status);
+                    console.log('API Content-Type:', contentType);
+                    console.log('Response starts with:', responseText.substring(0, 50));
+                    
                     // 检查 HTTP 状态码
                     if (!response.ok) {
-                        const responseText = await response.text();
                         let errorMsg = `API 请求失败: ${response.status}`;
                         if (responseText && responseText.length < 500) {
-                            errorMsg += ` - ${responseText.substring(0, 200)}`;
+                            // 如果是 HTML，提取错误信息
+                            if (responseText.trim().startsWith('<')) {
+                                const match = responseText.match(/<title[^>]*>([^<]+)<\/title>/i);
+                                if (match) {
+                                    errorMsg += ` - ${match[1].trim()}`;
+                                } else {
+                                    errorMsg += ` - HTML响应`;
+                                }
+                            } else {
+                                errorMsg += ` - ${responseText.substring(0, 200)}`;
+                            }
                         }
                         throw new Error(errorMsg);
                     }
                     
-                    // 获取响应内容并检查是否为 HTML
-                    const responseText = await response.text();
-                    
-                    // 检查响应是否为 HTML（以 < 开头）
+                    // 检查响应是否可能是 HTML
                     if (responseText.trim().startsWith('<')) {
                         throw new Error('API 返回了 HTML 内容，不是预期的 JSON 响应');
+                    }
+                    
+                    // 检查 Content-Type 是否表明是 JSON
+                    if (!contentType.includes('application/json') && !contentType.includes('text/plain')) {
+                        console.warn('Unexpected Content-Type:', contentType);
                     }
                     
                     // 尝试解析 JSON
@@ -262,7 +281,22 @@ export default {
                     throw new Error('服务器错误: ' + response.status);
                 }
                 
-                const data = await response.json();
+                // 获取响应内容并检查类型
+                const responseText = await response.text();
+                const contentType = response.headers.get('content-type');
+                
+                // 检查是否为 HTML
+                if (responseText.trim().startsWith('<')) {
+                    throw new Error('服务器返回了 HTML 内容，不是预期的 JSON');
+                }
+                
+                // 尝试解析 JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('无法解析响应为 JSON: ' + responseText.substring(0, 50));
+                }
                 
                 if (data.title === '错误') {
                     summary.innerHTML = '<strong class="error">❌ ' + data.title + ':</strong> ' + data.summary;
