@@ -418,6 +418,87 @@ export default {
             color: #4b5563;
             margin-bottom: 3px;
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 12px;
+            }
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 10px;
+            }
+            .container {
+                padding: 20px 18px;
+                border-radius: 16px;
+            }
+            .mode-tab {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .tip-box {
+                padding: 12px 14px;
+                margin-bottom: 16px;
+                font-size: 12px;
+            }
+            .tip-box .tip-title {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+            .tip-box ul {
+                column-gap: 15px;
+            }
+            .tip-box li {
+                margin-bottom: 4px;
+                padding-left: 14px;
+            }
+            .form-group {
+                margin-bottom: 18px;
+            }
+            input, textarea {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+            button {
+                padding: 16px;
+                font-size: 16px;
+            }
+            .footer {
+                margin-top: 20px;
+                padding: 10px 12px;
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px 8px;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .container {
+                padding: 16px 14px;
+            }
+            .mode-tabs {
+                gap: 8px;
+                padding: 6px;
+            }
+            .mode-tab {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .tip-box ul {
+                columns: 1;
+            }
+            input, textarea {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            button {
+                padding: 14px;
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
