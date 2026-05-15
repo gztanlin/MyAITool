@@ -567,8 +567,8 @@ export default {
         </div>
         
         <div class="footer">
-            <div class="brand">POWER BY TANLIN@2026</div>
             <div>AI 服务由通义千问提供</div>
+            <div class="brand">POWER BY TANLIN@2026</div>
         </div>
     </div>
     <script>
