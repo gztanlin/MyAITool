@@ -399,14 +399,14 @@
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab active" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
-            <button class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
+            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
         </div>
 
         <div class="card">
-            <input type="hidden" id="modeSelect" value="analyze">
+            <input type="hidden" id="modeSelect" value="chat">
             
-            <div id="analyzeMode">
+            <div id="analyzeMode" class="hidden">
                 <div class="tip-box">
                     <div class="tip-title">💡 内容分析可以做什么</div>
                     <ul>
@@ -443,7 +443,7 @@
                 </div>
             </div>
 
-            <div id="chatMode" class="hidden">
+            <div id="chatMode">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI问答可以做什么</div>
                     <ul>
@@ -464,13 +464,13 @@
             </div>
 
             <button class="submit-btn" id="submitBtn">
-                <span id="btnIcon">🚀</span>
-                <span id="btnText">开始分析</span>
+                <span id="btnIcon">�</span>
+                <span id="btnText">提问</span>
             </button>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p id="loadingText">AI 正在分析，请稍候...</p>
+                <p id="loadingText">AI 正在思考，请稍候...</p>
             </div>
 
             <div class="error-message" id="errorMessage">

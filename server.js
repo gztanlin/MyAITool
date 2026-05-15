@@ -506,13 +506,13 @@ export default {
         <h1>🤖 我的AI工具</h1>
         
         <div class="mode-tabs">
-            <div class="mode-tab active" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</div>
-            <div class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</div>
+            <div class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</div>
+            <div class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</div>
         </div>
         
-        <input type="hidden" id="modeSelect" value="analyze">
+        <input type="hidden" id="modeSelect" value="chat">
         
-        <div id="analyzeMode" class="mode-content">
+        <div id="analyzeMode" class="mode-content hidden">
             <div class="tip-box">
                 <div class="tip-title">💡 内容分析可以做什么</div>
                 <ul>
@@ -538,7 +538,7 @@ export default {
             </div>
         </div>
         
-        <div id="chatMode" class="mode-content hidden">
+        <div id="chatMode" class="mode-content">
             <div class="tip-box">
                 <div class="tip-title">💡 AI问答可以做什么</div>
                 <ul>
@@ -558,7 +558,7 @@ export default {
         
         <button id="submitBtn" onclick="analyze()">
             <span class="loading" id="loading" style="display:none"></span>
-            <span id="btnText">开始分析</span>
+            <span id="btnText">提问</span>
         </button>
         
         <div id="result" class="result-card">
