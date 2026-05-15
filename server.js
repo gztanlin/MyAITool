@@ -22,9 +22,17 @@ export default {
         // API 请求
         if (pathname === '/api/summarize') {
             if (method === 'POST') {
-                const body = await req.text();
-                let requestData;
+                let body;
+                try {
+                    body = await req.text();
+                } catch (e) {
+                    return new Response(
+                        JSON.stringify({ error: '无法读取请求体' }),
+                        { status: 400, headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
                 
+                let requestData;
                 try {
                     requestData = JSON.parse(body);
                 } catch (e) {
@@ -111,11 +119,29 @@ export default {
                     
                     // 检查 HTTP 状态码
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`API 请求失败: ${response.status} - ${errorText}`);
+                        const responseText = await response.text();
+                        let errorMsg = `API 请求失败: ${response.status}`;
+                        if (responseText && responseText.length < 500) {
+                            errorMsg += ` - ${responseText.substring(0, 200)}`;
+                        }
+                        throw new Error(errorMsg);
                     }
                     
-                    const result = await response.json();
+                    // 获取响应内容并检查是否为 HTML
+                    const responseText = await response.text();
+                    
+                    // 检查响应是否为 HTML（以 < 开头）
+                    if (responseText.trim().startsWith('<')) {
+                        throw new Error('API 返回了 HTML 内容，不是预期的 JSON 响应');
+                    }
+                    
+                    // 尝试解析 JSON
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (e) {
+                        throw new Error('无法解析 API 响应为 JSON: ' + responseText.substring(0, 100));
+                    }
                     
                     if (result.output && result.output.choices && result.output.choices[0]) {
                         const aiContent = result.output.choices[0].message.content;
@@ -130,7 +156,7 @@ export default {
                             { headers: { 'Content-Type': 'application/json' } }
                         );
                     } else {
-                        throw new Error('AI API 返回格式错误: ' + JSON.stringify(result));
+                        throw new Error('AI API 返回格式错误: ' + JSON.stringify(result).substring(0, 200));
                     }
                 } catch (error) {
                     console.error('AI API Error:', error);
