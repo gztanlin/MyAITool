@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI内容分析 - 智能网页内容分析工具</title>
+    <title>我的AI工具</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,99 +14,101 @@
             line-height: 1.6;
         }
         .container { max-width: 800px; margin: 0 auto; }
-        .header { text-align: center; color: white; margin-bottom: 50px; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
         .header h1 { font-size: 2.6rem; margin-bottom: 15px; font-weight: 700; }
-        .header p { opacity: 0.95; font-size: 1.1rem; margin-bottom: 10px; }
-        .header .tagline { opacity: 0.85; font-size: 0.95rem; }
+        .header p { opacity: 0.95; font-size: 1.1rem; }
+        
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 8px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 14px 20px;
+            text-align: center;
+            background: transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 15px;
+            color: #666;
+            border: none;
+        }
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+        .mode-tab:not(.active):hover {
+            background: #f0f0f0;
+        }
         
         .card {
             background: white;
             border-radius: 20px;
             box-shadow: 0 25px 80px rgba(0,0,0,0.3);
-            padding: 40px;
-            margin-bottom: 25px;
+            padding: 35px;
         }
         
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .card-header .icon {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-        .card-header h2 {
-            font-size: 1.4rem;
-            color: #1a202c;
-            font-weight: 600;
-        }
-        
-        .form-group { margin-bottom: 24px; }
+        .form-group { margin-bottom: 22px; }
         .form-group label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-weight: 600;
             color: #2d3748;
             margin-bottom: 10px;
             font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         .form-group label .badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .form-group label .optional {
             background: #e2e8f0;
-            color: #4a5568;
-            padding: 2px 8px;
+            color: #718096;
+            padding: 2px 10px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 500;
         }
         
-        .form-group input {
-            width: 100%;
-            padding: 15px 18px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s;
-            outline: none;
-            background: #fff;
-        }
-        .form-group input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
-        }
-        
+        .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 15px 18px;
+            padding: 14px 18px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 15px;
-            min-height: 180px;
-            resize: vertical;
             transition: all 0.3s;
             outline: none;
             font-family: inherit;
             line-height: 1.6;
         }
+        .form-group input:focus,
         .form-group textarea:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
         }
         
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
         .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -119,13 +121,28 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            position: relative;
+            overflow: hidden;
         }
-        .submit-btn:hover {
-            transform: translateY(-3px);
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .submit-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(102,126,234,0.4);
         }
         .submit-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
@@ -133,17 +150,17 @@
         .loading {
             display: none;
             text-align: center;
-            padding: 40px;
+            padding: 30px;
         }
         .loading.show { display: block; }
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #e2e8f0;
+            width: 45px;
+            height: 45px;
+            border: 4px solid #e2e8f0;
             border-top-color: #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading p {
@@ -164,28 +181,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             padding-bottom: 15px;
             border-bottom: 2px solid #e2e8f0;
         }
         .result-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 600;
             color: #1a202c;
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-        .result-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 13px;
-            color: #718096;
-        }
-        .result-meta span {
-            background: #f7fafc;
-            padding: 6px 12px;
-            border-radius: 8px;
         }
         
         .summary-content {
@@ -193,10 +199,10 @@
             color: #4a5568;
             font-size: 15px;
             background: #f7fafc;
-            padding: 25px;
+            padding: 22px;
             border-radius: 12px;
             white-space: pre-wrap;
-            min-height: 200px;
+            min-height: 150px;
             border: 1px solid #e2e8f0;
         }
         
@@ -205,250 +211,201 @@
             background: #fff5f5;
             border: 1px solid #feb2b2;
             color: #c53030;
-            padding: 16px;
+            padding: 14px;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-top: 18px;
             font-size: 14px;
-            display: flex;
             align-items: flex-start;
             gap: 10px;
         }
         .error-message.show { display: flex; }
         .error-message .icon { font-size: 18px; }
         
-        .tips {
-            background: linear-gradient(135deg, #ebf8ff 0%, #e6fffa 100%);
-            border-left: 4px solid #3182ce;
-            padding: 20px;
-            border-radius: 0 12px 12px 0;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #2c5282;
-        }
-        .tips h4 {
-            margin-bottom: 12px;
-            color: #2b6cb0;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .tips ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        .tips li {
-            padding: 6px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-        .tips li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #38a169;
-            font-weight: 600;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .feature-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            color: white;
-        }
-        .feature-card .icon {
-            font-size: 32px;
-            margin-bottom: 15px;
-        }
-        .feature-card h3 {
-            font-size: 1rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        .feature-card p {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-        
         .footer {
             text-align: center;
             color: rgba(255,255,255,0.8);
-            margin-top: 40px;
+            margin-top: 35px;
             font-size: 13px;
         }
         
+        .hidden { display: none !important; }
+        
         @media (max-width: 768px) {
-            .features {
-                grid-template-columns: 1fr;
-            }
-            .card {
-                padding: 25px;
-            }
-            .header h1 {
-                font-size: 2rem;
-            }
+            .card { padding: 25px; }
+            .header h1 { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 AI内容分析</h1>
-            <p>智能网页内容分析工具</p>
-            <p class="tagline">一键分析网页内容，生成专业摘要报告</p>
+            <h1>🤖 我的AI工具</h1>
+            <p>智能内容分析与 AI 问答助手</p>
         </div>
 
-        <div class="features">
-            <div class="feature-card">
-                <div class="icon">🌐</div>
-                <h3>智能抓取</h3>
-                <p>自动抓取网页内容，无需手动复制粘贴</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">⚡</div>
-                <h3>AI分析</h3>
-                <p>智能提取核心要点，生成详细分析报告</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">📊</div>
-                <h3>深度解读</h3>
-                <p>多维度分析内容结构和重点信息</p>
-            </div>
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
+            <button class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <div class="icon">🔗</div>
-                <h2>内容来源</h2>
+            <input type="hidden" id="modeSelect" value="analyze">
+            
+            <div id="analyzeMode">
+                <div class="form-group">
+                    <label>
+                        🌐 网页地址
+                        <span class="badge">URL</span>
+                    </label>
+                    <input type="url" id="urlInput" placeholder="请输入网页地址，例如：https://example.com/article">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        📝 内容文本
+                        <span class="optional">可选</span>
+                    </label>
+                    <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        🎯 分析要求
+                        <span class="optional">可选</span>
+                    </label>
+                    <textarea id="promptInput" placeholder="请输入分析要求，例如：总结核心要点、提取关键数据等" style="min-height: 80px;"></textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>
-                    🌐 网页地址
-                    <span class="badge">URL</span>
-                </label>
-                <input type="url" id="urlInput" placeholder="请输入网页地址，例如：https://example.com/article">
-            </div>
-
-            <div class="form-group">
-                <label>
-                    📝 页面内容（可选）
-                    <span class="badge">TEXT</span>
-                </label>
-                <textarea id="contentInput" placeholder="如果无法自动抓取网页内容，或者您想分析一段文本，可以在此粘贴...
-
-支持直接粘贴新闻文章、博客内容、文档段落等各种文本格式。
-系统会自动处理并提取核心信息。"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>
-                    🎯 分析要求（可选）
-                </label>
-                <textarea id="analysisPrompt" placeholder="请输入您的分析要求，例如：
-
-1. 总结核心要点
-2. 提取关键数据和统计信息
-3. 分析文章结构和逻辑框架
-4. 找出重点结论和核心观点
-5. 生成行动建议或决策参考
-
-留空则使用默认的综合分析模式。"></textarea>
+            <div id="chatMode" class="hidden">
+                <div class="form-group">
+                    <label>
+                        💬 你的问题
+                    </label>
+                    <textarea id="questionInput" placeholder="请输入你想问的问题..." style="min-height: 150px;"></textarea>
+                </div>
             </div>
 
             <button class="submit-btn" id="submitBtn">
-                <span>🚀</span>
-                <span>开始智能分析</span>
+                <span id="btnIcon">🚀</span>
+                <span id="btnText">开始分析</span>
             </button>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>AI 正在深度分析内容，请稍候...</p>
+                <p id="loadingText">AI 正在分析，请稍候...</p>
             </div>
 
             <div class="error-message" id="errorMessage">
                 <span class="icon">❌</span>
-                <span></span>
+                <span id="errorText"></span>
             </div>
 
             <div class="result-container" id="resultContainer">
                 <div class="result-header">
                     <div class="result-title">
-                        <span>📊</span>
-                        <span>分析结果</span>
-                    </div>
-                    <div class="result-meta">
-                        <span id="resultProvider"></span>
-                        <span id="resultLength"></span>
+                        <span id="resultIcon">📊</span>
+                        <span id="resultTitle">分析结果</span>
                     </div>
                 </div>
                 <div class="summary-content" id="summaryContent"></div>
             </div>
-
-            <div class="tips">
-                <h4>📌 使用指南</h4>
-                <ul>
-                    <li>输入网页URL，系统会自动抓取并分析页面内容</li>
-                    <li>如果自动抓取失败，可以手动粘贴页面文本到内容框</li>
-                    <li>自定义分析要求可以让AI按照您的需求进行分析</li>
-                    <li>分析结果会包含核心要点总结、详细分析和建议</li>
-                </ul>
-            </div>
         </div>
 
         <div class="footer">
-            <p>💡 AI配置已在后台设置，如需修改请联系管理员</p>
+            <p>💡 基于通义千问 AI 驱动</p>
         </div>
     </div>
 
     <script>
+        const modeSelect = document.getElementById('modeSelect');
         const urlInput = document.getElementById('urlInput');
         const contentInput = document.getElementById('contentInput');
-        const analysisPrompt = document.getElementById('analysisPrompt');
+        const promptInput = document.getElementById('promptInput');
+        const questionInput = document.getElementById('questionInput');
         const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
         const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
         const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
         const resultContainer = document.getElementById('resultContainer');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultIcon = document.getElementById('resultIcon');
         const summaryContent = document.getElementById('summaryContent');
-        const resultProvider = document.getElementById('resultProvider');
-        const resultLength = document.getElementById('resultLength');
+        const analyzeMode = document.getElementById('analyzeMode');
+        const chatMode = document.getElementById('chatMode');
+        const tabAnalyze = document.getElementById('tab-analyze');
+        const tabChat = document.getElementById('tab-chat');
 
-        const providerNames = {
-            qianwen: '阿里云 - 通义千问',
-            wenxin: '百度 - 文心一言',
-            doubao: '字节跳动 - 豆包',
-            openai: 'OpenAI - GPT'
-        };
+        function switchMode(mode) {
+            modeSelect.value = mode;
+            
+            if (mode === 'chat') {
+                analyzeMode.classList.add('hidden');
+                chatMode.classList.remove('hidden');
+                tabAnalyze.classList.remove('active');
+                tabChat.classList.add('active');
+                btnText.textContent = '提问';
+                btnIcon.textContent = '💬';
+                loadingText.textContent = 'AI 正在思考，请稍候...';
+            } else {
+                analyzeMode.classList.remove('hidden');
+                chatMode.classList.add('hidden');
+                tabAnalyze.classList.add('active');
+                tabChat.classList.remove('active');
+                btnText.textContent = '开始分析';
+                btnIcon.textContent = '🚀';
+                loadingText.textContent = 'AI 正在分析，请稍候...';
+            }
+            
+            errorMessage.classList.remove('show');
+            resultContainer.classList.remove('show');
+        }
 
-        async function summarize() {
-            const url = urlInput.value.trim();
-            const content = contentInput.value.trim();
-            const prompt = analysisPrompt.value.trim();
+        async function analyze() {
+            const mode = modeSelect.value;
+            errorMessage.classList.remove('show');
+            resultContainer.classList.remove('show');
+            
+            let requestData = { mode };
 
-            if (!url && !content) {
-                showError('请输入网页地址或粘贴页面内容');
-                return;
+            if (mode === 'chat') {
+                const question = questionInput.value.trim();
+                if (!question) {
+                    showError('请输入问题');
+                    return;
+                }
+                requestData.question = question;
+            } else {
+                const url = urlInput.value.trim();
+                const content = contentInput.value.trim();
+                const prompt = promptInput.value.trim();
+
+                if (!url && !content) {
+                    showError('请输入网页地址或内容文本');
+                    return;
+                }
+
+                if (url && content) {
+                    showError('请只选择网页地址或内容文本，不要同时输入');
+                    return;
+                }
+
+                requestData.url = url;
+                requestData.content = content;
+                requestData.prompt = prompt;
             }
 
             loading.classList.add('show');
-            errorMessage.classList.remove('show');
-            resultContainer.classList.remove('show');
             submitBtn.disabled = true;
 
             try {
                 const response = await fetch('/api/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, content, prompt })
+                    body: JSON.stringify(requestData)
                 });
 
                 const data = await response.json();
@@ -457,9 +414,15 @@
                     throw new Error(data.error || '请求失败');
                 }
 
-                summaryContent.textContent = data.summary;
-                resultProvider.textContent = '服务商: ' + (providerNames[data.provider] || data.provider);
-                resultLength.textContent = '内容长度: ' + data.contentLength + ' 字符';
+                if (data.title === '错误') {
+                    resultTitle.textContent = '错误';
+                    resultIcon.textContent = '❌';
+                    summaryContent.textContent = data.summary;
+                } else {
+                    resultTitle.textContent = mode === 'chat' ? 'AI 回答' : '分析结果';
+                    resultIcon.textContent = mode === 'chat' ? '💬' : '📊';
+                    summaryContent.textContent = data.summary;
+                }
                 resultContainer.classList.add('show');
 
             } catch (error) {
@@ -471,12 +434,15 @@
         }
 
         function showError(message) {
-            errorMessage.querySelector('span:last-child').textContent = message;
+            errorText.textContent = message;
             errorMessage.classList.add('show');
         }
 
-        submitBtn.addEventListener('click', summarize);
-        urlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') summarize(); });
+        submitBtn.addEventListener('click', analyze);
+        
+        urlInput.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter' && modeSelect.value === 'analyze') analyze(); 
+        });
     </script>
 </body>
 </html>
