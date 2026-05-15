@@ -390,13 +390,18 @@ export default {
         }
         .footer {
             text-align: center;
-            color: rgba(255,255,255,0.9);
+            color: #6b7280;
             margin-top: 35px;
             font-size: 13px;
             line-height: 1.8;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
         }
         .footer .brand {
             font-weight: 600;
+            color: #4b5563;
             margin-bottom: 4px;
         }
     </style>
@@ -467,7 +472,7 @@ export default {
         </div>
         
         <div class="footer">
-            <div class="brand">BY TANLIN 时间@2026</div>
+            <div class="brand">POWER BY TANLIN@2026</div>
             <div>AI 服务由通义千问提供</div>
         </div>
     </div>
