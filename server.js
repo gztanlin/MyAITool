@@ -214,34 +214,173 @@ export default {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的AI工具</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .container { background: #f5f5f5; border-radius: 12px; padding: 30px; }
-        h1 { color: #1a73e8; text-align: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px; 
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 { 
+            color: #1a1a2e; 
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        textarea { height: 150px; resize: vertical; }
-        button { background: #1a73e8; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        button:hover { background: #1557b0; }
-        #result { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; display: none; }
-        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #1a73e8; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #333;
+        }
+        input, textarea, select { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 10px; 
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        textarea { height: 120px; resize: vertical; }
+        select {
+            cursor: pointer;
+            background: white;
+        }
+        button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            padding: 14px 40px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        button:hover:not(:disabled) { 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+        .result-card { 
+            margin-top: 30px; 
+            padding: 24px; 
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        .result-content {
+            color: #333;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .loading { 
+            display: inline-block; 
+            width: 18px; 
+            height: 18px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 50%; 
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
         .error { color: #dc3545; }
         .hidden { display: none; }
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #f0f0f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .mode-tab:not(.active):hover {
+            background: #e0e0e0;
+        }
+        .mode-content {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🤖 我的AI工具</h1>
-        <div class="form-group">
-            <label>选择模式</label>
-            <select id="modeSelect" onchange="toggleMode()">
-                <option value="analyze">内容分析</option>
-                <option value="chat">AI问答</option>
-            </select>
+        
+        <div class="mode-tabs">
+            <div class="mode-tab active" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</div>
+            <div class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</div>
         </div>
         
-        <div id="analyzeMode">
+        <input type="hidden" id="modeSelect" value="analyze">
+        
+        <div id="analyzeMode" class="mode-content">
             <div class="form-group">
                 <label>📄 网页地址</label>
                 <input type="text" id="urlInput" placeholder="请输入要分析的网页地址">
@@ -252,41 +391,50 @@ export default {
             </div>
             <div class="form-group">
                 <label>🎯 分析要求（可选）</label>
-                <textarea id="promptInput" placeholder="请输入分析要求（可选）"></textarea>
+                <textarea id="promptInput" placeholder="请输入分析要求（可选）" style="height: 80px;"></textarea>
             </div>
         </div>
         
-        <div id="chatMode" class="hidden">
+        <div id="chatMode" class="mode-content hidden">
             <div class="form-group">
                 <label>💬 你的问题</label>
-                <textarea id="questionInput" placeholder="请输入你想问的问题"></textarea>
+                <textarea id="questionInput" placeholder="请输入你想问的问题" style="height: 120px;"></textarea>
             </div>
         </div>
         
-        <button onclick="analyze()">
+        <button id="submitBtn" onclick="analyze()">
             <span class="loading" id="loading" style="display:none"></span>
-            <span id="btnText">提交</span>
+            <span id="btnText">开始分析</span>
         </button>
-        <div id="result">
-            <h3>📊 结果</h3>
-            <div id="summary"></div>
+        
+        <div id="result" class="result-card">
+            <h3 id="resultTitle">📊 分析结果</h3>
+            <div id="summary" class="result-content"></div>
         </div>
     </div>
     <script>
-        function toggleMode() {
-            const mode = document.getElementById('modeSelect').value;
+        function switchMode(mode) {
+            const modeSelect = document.getElementById('modeSelect');
             const analyzeMode = document.getElementById('analyzeMode');
             const chatMode = document.getElementById('chatMode');
-            const result = document.getElementById('result');
+            const tabAnalyze = document.getElementById('tab-analyze');
+            const tabChat = document.getElementById('tab-chat');
             const btnText = document.getElementById('btnText');
+            const result = document.getElementById('result');
+            
+            modeSelect.value = mode;
             
             if (mode === 'chat') {
                 analyzeMode.classList.add('hidden');
                 chatMode.classList.remove('hidden');
+                tabAnalyze.classList.remove('active');
+                tabChat.classList.add('active');
                 btnText.textContent = '提问';
             } else {
                 analyzeMode.classList.remove('hidden');
                 chatMode.classList.add('hidden');
+                tabAnalyze.classList.add('active');
+                tabChat.classList.remove('active');
                 btnText.textContent = '开始分析';
             }
             result.style.display = 'none';
@@ -296,8 +444,10 @@ export default {
             const mode = document.getElementById('modeSelect').value;
             const loading = document.getElementById('loading');
             const btnText = document.getElementById('btnText');
+            const submitBtn = document.getElementById('submitBtn');
             const result = document.getElementById('result');
             const summary = document.getElementById('summary');
+            const resultTitle = document.getElementById('resultTitle');
             
             let requestData = { mode };
             
@@ -330,6 +480,7 @@ export default {
             
             loading.style.display = 'inline-block';
             btnText.textContent = mode === 'chat' ? '思考中...' : '分析中...';
+            submitBtn.disabled = true;
             result.style.display = 'none';
             
             try {
@@ -356,18 +507,25 @@ export default {
                     throw new Error('无法解析响应为 JSON: ' + responseText.substring(0, 50));
                 }
                 
+                resultTitle.textContent = data.title === '错误' ? '❌ 错误' : (mode === 'chat' ? '💬 AI 回答' : '📊 分析结果');
+                
                 if (data.title === '错误') {
-                    summary.innerHTML = '<strong class="error">❌ ' + data.title + ':</strong> ' + data.summary;
+                    summary.innerHTML = data.summary;
+                    summary.className = 'result-content error';
                 } else {
-                    summary.innerHTML = '<strong>标题:</strong> ' + data.title + '<br><br><strong>结果:</strong><br>' + data.summary.replace(/\\n/g, '<br>');
+                    summary.innerHTML = data.summary.replace(/\\n/g, '<br>');
+                    summary.className = 'result-content';
                 }
                 result.style.display = 'block';
             } catch (error) {
-                summary.innerHTML = '<strong class="error">❌ 错误:</strong> ' + error.message;
+                resultTitle.textContent = '❌ 错误';
+                summary.innerHTML = error.message;
+                summary.className = 'result-content error';
                 result.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
                 btnText.textContent = mode === 'chat' ? '提问' : '开始分析';
+                submitBtn.disabled = false;
             }
         }
     </script>
