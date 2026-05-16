@@ -17,7 +17,7 @@ export default {
             );
         }
         
-        if (pathname === '/api/summarize' || pathname === '/api/conversation') {
+        if (pathname === '/api/summarize' || pathname === '/api/conversation' || pathname === '/api/feedback') {
             if (method === 'POST') {
                 let body;
                 try {
@@ -28,7 +28,7 @@ export default {
                         { status: 400, headers: { 'Content-Type': 'application/json' } }
                     );
                 }
-                
+
                 let requestData;
                 try {
                     requestData = JSON.parse(body);
@@ -38,7 +38,40 @@ export default {
                         { status: 400, headers: { 'Content-Type': 'application/json' } }
                     );
                 }
-                
+
+                if (pathname === '/api/feedback') {
+                    const { content, email, wechat } = requestData;
+                    if (!content) {
+                        return new Response(
+                            JSON.stringify({ error: '请输入留言内容' }),
+                            { status: 400, headers: { 'Content-Type': 'application/json' } }
+                        );
+                    }
+
+                    const timestamp = new Date().toLocaleString('zh-CN');
+                    const feedbackEntry = {
+                        time: timestamp,
+                        content: content,
+                        email: email || '未提供',
+                        wechat: wechat || '未提供'
+                    };
+
+                    console.log('=== 收到新留言 ===');
+                    console.log(`时间: ${feedbackEntry.time}`);
+                    console.log(`邮箱: ${feedbackEntry.email}`);
+                    console.log(`微信: ${feedbackEntry.wechat}`);
+                    console.log(`内容: ${feedbackEntry.content}`);
+                    console.log('====================');
+
+                    return new Response(
+                        JSON.stringify({
+                            success: true,
+                            message: '留言提交成功'
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
+
                 try {
                     const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
                     let messages = [];
@@ -683,13 +716,13 @@ export default {
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
             <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
-            <button class="mode-tab active" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
         </div>
 
         <div class="card">
-            <div id="chatMode" class="hidden">
+            <div id="chatMode">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI问答可以做什么</div>
                     <ul>
@@ -796,7 +829,7 @@ export default {
                 </div>
             </div>
 
-            <div id="conversationMode">
+            <div id="conversationMode" class="hidden">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI对话功能</div>
                     <ul>
@@ -1065,7 +1098,7 @@ export default {
             }
         });
 
-        switchMode('conversation');
+        switchMode('chat');
     </script>
 </body>
 </html>`;

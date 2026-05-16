@@ -185,6 +185,104 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        .feedback-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+        .feedback-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal.hidden {
+            display: none;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover {
+            background: #e2e8f0;
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 0 24px 24px;
+        }
+        .success-message {
+            display: none;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 14px;
+            border-radius: 10px;
+            margin: 0 24px 24px;
+            font-size: 14px;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .success-message.show {
+            display: flex;
+        }
+        .success-message .icon { font-size: 18px; }
         
         .loading {
             display: none;
@@ -464,14 +562,14 @@
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
             <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
-            <button class="mode-tab active" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
         </div>
 
         <div class="card">
             <!-- AI问答模式 -->
-            <div id="chatMode" class="hidden">
+            <div id="chatMode">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI问答可以做什么</div>
                     <ul>
@@ -580,7 +678,7 @@
             </div>
 
             <!-- AI对话模式 -->
-            <div id="conversationMode">
+            <div id="conversationMode" class="hidden">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI对话功能</div>
                     <ul>
@@ -615,8 +713,51 @@
         </div>
 
         <div class="footer">
+            <button class="feedback-btn" id="feedbackBtn" onclick="openFeedbackModal()">✉️ 给我留言</button>
             <div>AI 服务由通义千问提供</div>
             <div class="brand">POWER BY TANLIN@2026</div>
+        </div>
+
+        <!-- 留言模态框 -->
+        <div id="feedbackModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✉️ 给我留言</h3>
+                    <button class="modal-close" onclick="closeFeedbackModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>📝 您的留言</label>
+                        <textarea id="feedbackContent" placeholder="请输入您的留言、建议或问题..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>📧 您的邮箱 <span class="optional">可选</span></label>
+                        <input type="email" id="feedbackEmail" placeholder="方便我们回复您">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 您的微信 <span class="optional">可选</span></label>
+                        <input type="text" id="feedbackWechat" placeholder="方便我们联系您">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="submit-btn" id="feedbackSubmitBtn" onclick="submitFeedback()">
+                        <span>📤</span>
+                        <span>提交留言</span>
+                    </button>
+                </div>
+                <div class="loading" id="feedbackLoading">
+                    <div class="spinner"></div>
+                    <p>正在提交，请稍候...</p>
+                </div>
+                <div class="error-message" id="feedbackErrorMessage">
+                    <span class="icon">❌</span>
+                    <span id="feedbackErrorText"></span>
+                </div>
+                <div class="success-message" id="feedbackSuccessMessage">
+                    <span class="icon">✅</span>
+                    <span>留言提交成功，感谢您的反馈！</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -660,6 +801,17 @@
         const conversationLoading = document.getElementById('conversationLoading');
         const conversationErrorMessage = document.getElementById('conversationErrorMessage');
         const conversationErrorText = document.getElementById('conversationErrorText');
+
+        // 留言功能元素
+        const feedbackModal = document.getElementById('feedbackModal');
+        const feedbackContent = document.getElementById('feedbackContent');
+        const feedbackEmail = document.getElementById('feedbackEmail');
+        const feedbackWechat = document.getElementById('feedbackWechat');
+        const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+        const feedbackLoading = document.getElementById('feedbackLoading');
+        const feedbackErrorMessage = document.getElementById('feedbackErrorMessage');
+        const feedbackErrorText = document.getElementById('feedbackErrorText');
+        const feedbackSuccessMessage = document.getElementById('feedbackSuccessMessage');
 
         let conversationHistory = [];
 
@@ -848,6 +1000,85 @@
             conversationErrorMessage.classList.add('show');
         }
 
+        // 留言功能
+        function openFeedbackModal() {
+            feedbackModal.classList.remove('hidden');
+            feedbackSuccessMessage.classList.remove('show');
+            feedbackErrorMessage.classList.remove('show');
+            feedbackContent.value = '';
+            feedbackEmail.value = '';
+            feedbackWechat.value = '';
+        }
+
+        function closeFeedbackModal() {
+            feedbackModal.classList.add('hidden');
+        }
+
+        function showFeedbackError(message) {
+            feedbackErrorText.textContent = message;
+            feedbackErrorMessage.classList.add('show');
+        }
+
+        async function submitFeedback() {
+            const content = feedbackContent.value.trim();
+            if (!content) {
+                showFeedbackError('请输入留言内容');
+                return;
+            }
+
+            feedbackLoading.classList.add('show');
+            feedbackSubmitBtn.disabled = true;
+            feedbackErrorMessage.classList.remove('show');
+            feedbackSuccessMessage.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content,
+                        email: feedbackEmail.value.trim(),
+                        wechat: feedbackWechat.value.trim()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '提交失败');
+                }
+
+                feedbackSuccessMessage.classList.add('show');
+                feedbackContent.value = '';
+                feedbackEmail.value = '';
+                feedbackWechat.value = '';
+
+                setTimeout(() => {
+                    closeFeedbackModal();
+                }, 2000);
+
+            } catch (error) {
+                showFeedbackError(error.message);
+            } finally {
+                feedbackLoading.classList.remove('show');
+                feedbackSubmitBtn.disabled = false;
+            }
+        }
+
+        // 点击模态框外部关闭
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                closeFeedbackModal();
+            }
+        });
+
+        // ESC键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !feedbackModal.classList.contains('hidden')) {
+                closeFeedbackModal();
+            }
+        });
+
         // 事件监听
         chatSubmitBtn.addEventListener('click', submitChat);
         analyzeSubmitBtn.addEventListener('click', submitAnalyze);
@@ -860,8 +1091,8 @@
             }
         });
 
-        // 默认显示对话模式
-        switchMode('conversation');
+        // 默认显示AI问答
+        switchMode('chat');
     </script>
 </body>
 </html>
