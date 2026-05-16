@@ -1,43 +1,34 @@
-import { readFile, writeFile, existsSync } from 'fs';
-
 const DATA_FILE = './feedback-data.json';
 let feedbackMessages = [];
+let fsModule = null;
 
-function loadMessages() {
-    return new Promise((resolve) => {
-        if (existsSync(DATA_FILE)) {
-            readFile(DATA_FILE, 'utf8', (err, data) => {
-                if (err) {
-                    console.error('加载留言数据失败:', err);
-                    feedbackMessages = [];
-                } else {
-                    try {
-                        feedbackMessages = JSON.parse(data);
-                    } catch (e) {
-                        console.error('解析留言数据失败:', e);
-                        feedbackMessages = [];
-                    }
-                }
-                resolve();
-            });
-        } else {
-            feedbackMessages = [];
-            resolve();
-        }
-    });
+async function ensureFs() {
+    if (!fsModule) {
+        fsModule = await import('fs');
+    }
+    return fsModule;
 }
 
-function saveMessages() {
-    return new Promise((resolve, reject) => {
-        writeFile(DATA_FILE, JSON.stringify(feedbackMessages, null, 2), (err) => {
-            if (err) {
-                console.error('保存留言数据失败:', err);
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
+async function loadMessages() {
+    try {
+        const fs = await ensureFs();
+        if (fs.existsSync(DATA_FILE)) {
+            const data = await fs.promises.readFile(DATA_FILE, 'utf8');
+            feedbackMessages = JSON.parse(data);
+        }
+    } catch (err) {
+        console.error('加载留言数据失败:', err);
+        feedbackMessages = [];
+    }
+}
+
+async function saveMessages() {
+    try {
+        const fs = await ensureFs();
+        await fs.promises.writeFile(DATA_FILE, JSON.stringify(feedbackMessages, null, 2));
+    } catch (err) {
+        console.error('保存留言数据失败:', err);
+    }
 }
 
 loadMessages().then(() => {
