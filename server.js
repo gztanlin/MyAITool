@@ -1454,7 +1454,6 @@ export default {
         </div>
 
         <div class="footer">
-            <a href="/feedback" class="footer-link">💬 留言交流</a>
             <div>AI 服务由通义千问提供</div>
             <div class="brand">POWER BY TANLIN@2026</div>
         </div>
