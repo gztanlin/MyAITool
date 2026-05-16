@@ -1073,7 +1073,7 @@ export default {
 
         function addConversationMessage(role, content) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${role}`;
+            messageDiv.className = 'chat-message ' + role;
             const bubbleDiv = document.createElement('div');
             bubbleDiv.className = 'message-bubble';
             bubbleDiv.textContent = content;
