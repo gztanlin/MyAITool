@@ -1,39 +1,4 @@
-const DATA_FILE = './feedback-data.json';
 let feedbackMessages = [];
-let fsModule = null;
-
-async function ensureFs() {
-    if (!fsModule) {
-        fsModule = await import('fs');
-    }
-    return fsModule;
-}
-
-async function loadMessages() {
-    try {
-        const fs = await ensureFs();
-        if (fs.existsSync(DATA_FILE)) {
-            const data = await fs.promises.readFile(DATA_FILE, 'utf8');
-            feedbackMessages = JSON.parse(data);
-        }
-    } catch (err) {
-        console.error('加载留言数据失败:', err);
-        feedbackMessages = [];
-    }
-}
-
-async function saveMessages() {
-    try {
-        const fs = await ensureFs();
-        await fs.promises.writeFile(DATA_FILE, JSON.stringify(feedbackMessages, null, 2));
-    } catch (err) {
-        console.error('保存留言数据失败:', err);
-    }
-}
-
-loadMessages().then(() => {
-    console.log('留言数据加载完成，共 ' + feedbackMessages.length + ' 条记录');
-});
 
 export default {
     async fetch(req) {
@@ -1501,8 +1466,6 @@ export default {
                     
                     feedbackMessages.unshift(feedbackEntry);
 
-                    await saveMessages();
-
                     console.log('=== 收到新留言 ===');
                     console.log(`ID: ${feedbackEntry.id}`);
                     console.log(`时间: ${feedbackEntry.time}`);
@@ -1540,8 +1503,6 @@ export default {
                         time: timestamp,
                         content: content
                     });
-
-                    await saveMessages();
 
                     console.log('=== 收到回复 ===');
                     console.log(`留言ID: ${id}`);
