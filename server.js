@@ -1,4 +1,48 @@
-const feedbackMessages = [];
+import { readFile, writeFile, existsSync } from 'fs';
+
+const DATA_FILE = './feedback-data.json';
+let feedbackMessages = [];
+
+function loadMessages() {
+    return new Promise((resolve) => {
+        if (existsSync(DATA_FILE)) {
+            readFile(DATA_FILE, 'utf8', (err, data) => {
+                if (err) {
+                    console.error('加载留言数据失败:', err);
+                    feedbackMessages = [];
+                } else {
+                    try {
+                        feedbackMessages = JSON.parse(data);
+                    } catch (e) {
+                        console.error('解析留言数据失败:', e);
+                        feedbackMessages = [];
+                    }
+                }
+                resolve();
+            });
+        } else {
+            feedbackMessages = [];
+            resolve();
+        }
+    });
+}
+
+function saveMessages() {
+    return new Promise((resolve, reject) => {
+        writeFile(DATA_FILE, JSON.stringify(feedbackMessages, null, 2), (err) => {
+            if (err) {
+                console.error('保存留言数据失败:', err);
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+loadMessages().then(() => {
+    console.log('留言数据加载完成，共 ' + feedbackMessages.length + ' 条记录');
+});
 
 export default {
     async fetch(req) {
@@ -597,6 +641,8 @@ export default {
                     
                     feedbackMessages.unshift(feedbackEntry);
 
+                    await saveMessages();
+
                     console.log('=== 收到新留言 ===');
                     console.log(`ID: ${feedbackEntry.id}`);
                     console.log(`时间: ${feedbackEntry.time}`);
@@ -634,6 +680,8 @@ export default {
                         time: timestamp,
                         content: content
                     });
+
+                    await saveMessages();
 
                     console.log('=== 收到回复 ===');
                     console.log(`留言ID: ${id}`);
