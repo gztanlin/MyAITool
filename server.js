@@ -1,3 +1,5 @@
+const feedbackMessages = [];
+
 export default {
     async fetch(req) {
         const { url, method } = req;
@@ -205,27 +207,154 @@ export default {
             color: #2563eb;
             text-decoration: underline;
         }
+
+        .messages-section {
+            margin-top: 40px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 30px;
+        }
+
+        .messages-section h2 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .message-time {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .message-content {
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-replies {
+            margin-top: 16px;
+            padding-left: 20px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .reply-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .reply-admin {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .reply-time {
+            color: #9ca3af;
+            font-size: 0.75rem;
+        }
+
+        .reply-content {
+            color: #4b5563;
+            line-height: 1.5;
+            font-size: 0.9375rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .reply-form {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .reply-form textarea {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 60px;
+        }
+
+        .reply-form textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        .reply-form button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .reply-form button:hover {
+            background: #2563eb;
+        }
+
+        .reply-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>✉️ 给我留言</h1>
-            <p>欢迎给我留言，我会尽快回复您！</p>
+            <h1>💬 留言交流</h1>
+            <p>欢迎留言，我会尽快回复您！</p>
         </div>
 
         <form id="feedbackForm">
             <div class="form-group">
                 <label>📝 您的留言</label>
                 <textarea id="feedbackContent" placeholder="请输入您的留言、建议或问题..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>📧 您的邮箱 <span class="optional">可选</span></label>
-                <input type="email" id="feedbackEmail" placeholder="方便我们回复您">
-            </div>
-            <div class="form-group">
-                <label>📱 您的微信 <span class="optional">可选</span></label>
-                <input type="text" id="feedbackWechat" placeholder="方便我们联系您">
             </div>
 
             <button type="submit" class="submit-btn" id="feedbackSubmitBtn">
@@ -250,18 +379,22 @@ export default {
         </div>
 
         <a href="/" class="back-link">← 返回首页</a>
+
+        <div class="messages-section">
+            <h2>📋 留言记录</h2>
+            <div id="messagesList"></div>
+        </div>
     </div>
 
     <script>
         const feedbackForm = document.getElementById('feedbackForm');
         const feedbackContent = document.getElementById('feedbackContent');
-        const feedbackEmail = document.getElementById('feedbackEmail');
-        const feedbackWechat = document.getElementById('feedbackWechat');
         const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
         const feedbackLoading = document.getElementById('feedbackLoading');
         const feedbackErrorMessage = document.getElementById('feedbackErrorMessage');
         const feedbackErrorText = document.getElementById('feedbackErrorText');
         const feedbackSuccessMessage = document.getElementById('feedbackSuccessMessage');
+        const messagesList = document.getElementById('messagesList');
 
         function showFeedbackError(message) {
             feedbackErrorText.textContent = message;
@@ -275,8 +408,6 @@ export default {
             e.preventDefault();
             
             const content = feedbackContent.value.trim();
-            const email = feedbackEmail.value.trim();
-            const wechat = feedbackWechat.value.trim();
 
             if (!content) {
                 showFeedbackError('请输入留言内容');
@@ -292,11 +423,7 @@ export default {
                 const response = await fetch('/api/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: content,
-                        email: email,
-                        wechat: wechat
-                    })
+                    body: JSON.stringify({ content: content })
                 });
 
                 const data = await response.json();
@@ -307,8 +434,7 @@ export default {
 
                 feedbackSuccessMessage.classList.add('show');
                 feedbackContent.value = '';
-                feedbackEmail.value = '';
-                feedbackWechat.value = '';
+                loadMessages();
 
             } catch (error) {
                 showFeedbackError(error.message);
@@ -318,7 +444,104 @@ export default {
             }
         }
 
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/feedback');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '加载失败');
+                }
+
+                renderMessages(data.messages || []);
+            } catch (error) {
+                console.error('加载留言失败:', error);
+            }
+        }
+
+        function renderMessages(messages) {
+            if (messages.length === 0) {
+                messagesList.innerHTML = \`
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <p>暂无留言，快来发表第一条留言吧！</p>
+                    </div>
+                \`;
+                return;
+            }
+
+            messagesList.innerHTML = messages.map(msg => \`
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-time">\${msg.time}</span>
+                    </div>
+                    <div class="message-content">\${escapeHtml(msg.content)}</div>
+                    \${msg.replies && msg.replies.length > 0 ? \`
+                        <div class="message-replies">
+                            \${msg.replies.map(reply => \`
+                                <div class="reply-card">
+                                    <div class="reply-header">
+                                        <span class="reply-admin">👤 管理员回复</span>
+                                        <span class="reply-time">\${reply.time}</span>
+                                    </div>
+                                    <div class="reply-content">\${escapeHtml(reply.content)}</div>
+                                </div>
+                            \`).join('')}
+                        </div>
+                    \` : ''}
+                    <div class="reply-form" data-id="\${msg.id}">
+                        <textarea placeholder="输入回复内容..."></textarea>
+                        <button type="button" onclick="submitReply(\${msg.id})">回复</button>
+                    </div>
+                </div>
+            \`).join('');
+        }
+
+        async function submitReply(messageId) {
+            const replyForm = document.querySelector(\`.reply-form[data-id="\${messageId}"]\`);
+            const textarea = replyForm.querySelector('textarea');
+            const button = replyForm.querySelector('button');
+            const content = textarea.value.trim();
+
+            if (!content) {
+                alert('请输入回复内容');
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/feedback/reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: messageId, content: content })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '回复失败');
+                }
+
+                textarea.value = '';
+                loadMessages();
+
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         feedbackForm.addEventListener('submit', submitFeedback);
+        
+        loadMessages();
     </script>
 </body>
 </html>`,
@@ -326,7 +549,14 @@ export default {
             );
         }
         
-        if (pathname === '/api/summarize' || pathname === '/api/conversation' || pathname === '/api/feedback') {
+        if (pathname === '/api/summarize' || pathname === '/api/conversation' || pathname === '/api/feedback' || pathname === '/api/feedback/reply') {
+            if (method === 'GET' && pathname === '/api/feedback') {
+                return new Response(
+                    JSON.stringify({ messages: feedbackMessages }),
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+            
             if (method === 'POST') {
                 let body;
                 try {
@@ -349,7 +579,7 @@ export default {
                 }
 
                 if (pathname === '/api/feedback') {
-                    const { content, email, wechat } = requestData;
+                    const { content } = requestData;
                     if (!content) {
                         return new Response(
                             JSON.stringify({ error: '请输入留言内容' }),
@@ -359,16 +589,17 @@ export default {
 
                     const timestamp = new Date().toLocaleString('zh-CN');
                     const feedbackEntry = {
+                        id: Date.now(),
                         time: timestamp,
                         content: content,
-                        email: email || '未提供',
-                        wechat: wechat || '未提供'
+                        replies: []
                     };
+                    
+                    feedbackMessages.unshift(feedbackEntry);
 
                     console.log('=== 收到新留言 ===');
+                    console.log(`ID: ${feedbackEntry.id}`);
                     console.log(`时间: ${feedbackEntry.time}`);
-                    console.log(`邮箱: ${feedbackEntry.email}`);
-                    console.log(`微信: ${feedbackEntry.wechat}`);
                     console.log(`内容: ${feedbackEntry.content}`);
                     console.log('====================');
 
@@ -376,6 +607,44 @@ export default {
                         JSON.stringify({
                             success: true,
                             message: '留言提交成功'
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                }
+                
+                if (pathname === '/api/feedback/reply') {
+                    const { id, content } = requestData;
+                    if (!id || !content) {
+                        return new Response(
+                            JSON.stringify({ error: '缺少参数' }),
+                            { status: 400, headers: { 'Content-Type': 'application/json' } }
+                        );
+                    }
+                    
+                    const message = feedbackMessages.find(m => m.id === id);
+                    if (!message) {
+                        return new Response(
+                            JSON.stringify({ error: '留言不存在' }),
+                            { status: 404, headers: { 'Content-Type': 'application/json' } }
+                        );
+                    }
+                    
+                    const timestamp = new Date().toLocaleString('zh-CN');
+                    message.replies.push({
+                        time: timestamp,
+                        content: content
+                    });
+
+                    console.log('=== 收到回复 ===');
+                    console.log(`留言ID: ${id}`);
+                    console.log(`时间: ${timestamp}`);
+                    console.log(`内容: ${content}`);
+                    console.log('====================');
+
+                    return new Response(
+                        JSON.stringify({
+                            success: true,
+                            message: '回复成功'
                         }),
                         { headers: { 'Content-Type': 'application/json' } }
                     );
@@ -1173,7 +1442,7 @@ export default {
         </div>
 
         <div class="footer">
-            <a href="/feedback" class="footer-link">✉️ 给我留言</a>
+            <a href="/feedback" class="footer-link">💬 留言交流</a>
             <div>AI 服务由通义千问提供</div>
             <div class="brand">POWER BY TANLIN@2026</div>
         </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>给我留言 - AI助手</title>
+    <title>留言交流 - AI助手</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 40px auto;
             background: white;
             border-radius: 16px;
@@ -76,14 +76,8 @@
         }
 
         .form-group textarea {
-            min-height: 150px;
+            min-height: 100px;
             resize: vertical;
-        }
-
-        .optional {
-            color: #9ca3af;
-            font-weight: 400;
-            font-size: 0.875rem;
         }
 
         .submit-btn {
@@ -184,27 +178,154 @@
             color: #2563eb;
             text-decoration: underline;
         }
+
+        .messages-section {
+            margin-top: 40px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 30px;
+        }
+
+        .messages-section h2 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .message-time {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .message-content {
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-replies {
+            margin-top: 16px;
+            padding-left: 20px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .reply-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .reply-admin {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .reply-time {
+            color: #9ca3af;
+            font-size: 0.75rem;
+        }
+
+        .reply-content {
+            color: #4b5563;
+            line-height: 1.5;
+            font-size: 0.9375rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .reply-form {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .reply-form textarea {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 60px;
+        }
+
+        .reply-form textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        .reply-form button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .reply-form button:hover {
+            background: #2563eb;
+        }
+
+        .reply-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>✉️ 给我留言</h1>
-            <p>欢迎给我留言，我会尽快回复您！</p>
+            <h1>💬 留言交流</h1>
+            <p>欢迎留言，我会尽快回复您！</p>
         </div>
 
         <form id="feedbackForm">
             <div class="form-group">
                 <label>📝 您的留言</label>
                 <textarea id="feedbackContent" placeholder="请输入您的留言、建议或问题..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>📧 您的邮箱 <span class="optional">可选</span></label>
-                <input type="email" id="feedbackEmail" placeholder="方便我们回复您">
-            </div>
-            <div class="form-group">
-                <label>📱 您的微信 <span class="optional">可选</span></label>
-                <input type="text" id="feedbackWechat" placeholder="方便我们联系您">
             </div>
 
             <button type="submit" class="submit-btn" id="feedbackSubmitBtn">
@@ -229,18 +350,22 @@
         </div>
 
         <a href="/" class="back-link">← 返回首页</a>
+
+        <div class="messages-section">
+            <h2>📋 留言记录</h2>
+            <div id="messagesList"></div>
+        </div>
     </div>
 
     <script>
         const feedbackForm = document.getElementById('feedbackForm');
         const feedbackContent = document.getElementById('feedbackContent');
-        const feedbackEmail = document.getElementById('feedbackEmail');
-        const feedbackWechat = document.getElementById('feedbackWechat');
         const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
         const feedbackLoading = document.getElementById('feedbackLoading');
         const feedbackErrorMessage = document.getElementById('feedbackErrorMessage');
         const feedbackErrorText = document.getElementById('feedbackErrorText');
         const feedbackSuccessMessage = document.getElementById('feedbackSuccessMessage');
+        const messagesList = document.getElementById('messagesList');
 
         function showFeedbackError(message) {
             feedbackErrorText.textContent = message;
@@ -254,8 +379,6 @@
             e.preventDefault();
             
             const content = feedbackContent.value.trim();
-            const email = feedbackEmail.value.trim();
-            const wechat = feedbackWechat.value.trim();
 
             if (!content) {
                 showFeedbackError('请输入留言内容');
@@ -271,11 +394,7 @@
                 const response = await fetch('/api/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: content,
-                        email: email,
-                        wechat: wechat
-                    })
+                    body: JSON.stringify({ content: content })
                 });
 
                 const data = await response.json();
@@ -286,8 +405,7 @@
 
                 feedbackSuccessMessage.classList.add('show');
                 feedbackContent.value = '';
-                feedbackEmail.value = '';
-                feedbackWechat.value = '';
+                loadMessages();
 
             } catch (error) {
                 showFeedbackError(error.message);
@@ -297,7 +415,104 @@
             }
         }
 
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/feedback');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '加载失败');
+                }
+
+                renderMessages(data.messages || []);
+            } catch (error) {
+                console.error('加载留言失败:', error);
+            }
+        }
+
+        function renderMessages(messages) {
+            if (messages.length === 0) {
+                messagesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <p>暂无留言，快来发表第一条留言吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messagesList.innerHTML = messages.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-time">${msg.time}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                    ${msg.replies && msg.replies.length > 0 ? `
+                        <div class="message-replies">
+                            ${msg.replies.map(reply => `
+                                <div class="reply-card">
+                                    <div class="reply-header">
+                                        <span class="reply-admin">👤 管理员回复</span>
+                                        <span class="reply-time">${reply.time}</span>
+                                    </div>
+                                    <div class="reply-content">${escapeHtml(reply.content)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="reply-form" data-id="${msg.id}">
+                        <textarea placeholder="输入回复内容..."></textarea>
+                        <button type="button" onclick="submitReply(${msg.id})">回复</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitReply(messageId) {
+            const replyForm = document.querySelector(`.reply-form[data-id="${messageId}"]`);
+            const textarea = replyForm.querySelector('textarea');
+            const button = replyForm.querySelector('button');
+            const content = textarea.value.trim();
+
+            if (!content) {
+                alert('请输入回复内容');
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/feedback/reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: messageId, content: content })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '回复失败');
+                }
+
+                textarea.value = '';
+                loadMessages();
+
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         feedbackForm.addEventListener('submit', submitFeedback);
+        
+        loadMessages();
     </script>
 </body>
 </html>
