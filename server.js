@@ -17,7 +17,7 @@ export default {
             );
         }
         
-        if (pathname === '/api/summarize') {
+        if (pathname === '/api/summarize' || pathname === '/api/conversation') {
             if (method === 'POST') {
                 let body;
                 try {
@@ -39,57 +39,83 @@ export default {
                     );
                 }
                 
-                const { mode, url: inputUrl, content, prompt, question } = requestData;
-                
                 try {
                     const apiKey = 'sk-5b0ae74df47a459985325ddeb221bb7e';
-                    let userPrompt = '';
+                    let messages = [];
+                    let systemPrompt = '';
                     
-                    if (mode === 'chat') {
-                        if (!question) {
+                    if (pathname === '/api/conversation') {
+                        const { history } = requestData;
+                        if (!history || !Array.isArray(history)) {
                             return new Response(
-                                JSON.stringify({ error: '请输入问题' }),
+                                JSON.stringify({ error: '无效的对话历史' }),
                                 { status: 400, headers: { 'Content-Type': 'application/json' } }
                             );
                         }
-                        userPrompt = question;
+                        systemPrompt = '你是一个友好的AI助手，擅长与用户进行对话交流。请用自然、准确的语言回答用户的问题。';
+                        messages = [
+                            { role: 'system', content: systemPrompt },
+                            ...history
+                        ];
                     } else {
-                        if (!inputUrl && !content) {
-                            return new Response(
-                                JSON.stringify({ error: '请输入网页地址或内容文本' }),
-                                { status: 400, headers: { 'Content-Type': 'application/json' } }
-                            );
-                        }
+                        const { mode, url: inputUrl, content, prompt, question } = requestData;
                         
-                        let inputContent = content || '';
-                        userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
-                        
-                        if (inputUrl && !content) {
-                            try {
-                                const pageResponse = await fetch(inputUrl);
-                                if (!pageResponse.ok) {
-                                    throw new Error(`HTTP error! status: ${pageResponse.status}`);
-                                }
-                                const pageText = await pageResponse.text();
-                                
-                                const textContent = pageText
-                                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                                    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                                    .replace(/<[^>]+>/g, '')
-                                    .replace(/\s+/g, ' ')
-                                    .trim();
-                                
-                                if (textContent.length > 0) {
-                                    inputContent = textContent.substring(0, 20000);
-                                    userPrompt += `\n\n网页内容：\n${inputContent}`;
-                                } else {
-                                    userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
-                                }
-                            } catch (e) {
-                                userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                        if (mode === 'chat') {
+                            if (!question) {
+                                return new Response(
+                                    JSON.stringify({ error: '请输入问题' }),
+                                    { status: 400, headers: { 'Content-Type': 'application/json' } }
+                                );
                             }
-                        } else if (content) {
-                            userPrompt += `\n\n内容：${content}`;
+                            systemPrompt = '你是一个专业的AI助手，擅长回答各种问题。请用简洁、准确的语言回答。';
+                            messages = [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: question }
+                            ];
+                        } else {
+                            if (!inputUrl && !content) {
+                                return new Response(
+                                    JSON.stringify({ error: '请输入网页地址或内容文本' }),
+                                    { status: 400, headers: { 'Content-Type': 'application/json' } }
+                                );
+                            }
+                            
+                            let inputContent = content || '';
+                            let userPrompt = prompt || '请分析以下内容，提取标题并生成摘要：';
+                            
+                            if (inputUrl && !content) {
+                                try {
+                                    const pageResponse = await fetch(inputUrl);
+                                    if (!pageResponse.ok) {
+                                        throw new Error(`HTTP error! status: ${pageResponse.status}`);
+                                    }
+                                    const pageText = await pageResponse.text();
+                                    
+                                    const textContent = pageText
+                                        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                                        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                                        .replace(/<[^>]+>/g, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+                                    
+                                    if (textContent.length > 0) {
+                                        inputContent = textContent.substring(0, 20000);
+                                        userPrompt += `\n\n网页内容：\n${inputContent}`;
+                                    } else {
+                                        userPrompt += `\n\n网页地址：${inputUrl}\n无法获取网页内容，请提供文本内容。`;
+                                    }
+                                } catch (e) {
+                                    userPrompt += `\n\n网页地址：${inputUrl}\n获取网页内容失败：${e.message}`;
+                                }
+                            } else if (content) {
+                                userPrompt += `\n\n内容：${content}`;
+                            }
+                            
+                            systemPrompt = '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。';
+                            messages = [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: userPrompt }
+                            ];
                         }
                     }
                     
@@ -106,23 +132,8 @@ export default {
                             },
                             body: JSON.stringify({
                                 model: 'qwen-turbo',
-                                input: {
-                                    messages: [
-                                        {
-                                            role: 'system',
-                                            content: mode === 'chat' 
-                                                ? '你是一个专业的AI助手，擅长回答各种问题。请用简洁、准确的语言回答。'
-                                                : '你是一个专业的内容分析助手，擅长提取文章标题和生成摘要。请用简洁、准确的语言回答。'
-                                        },
-                                        {
-                                            role: 'user',
-                                            content: userPrompt
-                                        }
-                                    ]
-                                },
-                                parameters: {
-                                    result_format: 'message'
-                                }
+                                input: { messages: messages },
+                                parameters: { result_format: 'message' }
                             }),
                             signal: controller.signal
                         });
@@ -176,10 +187,9 @@ export default {
                         
                         return new Response(
                             JSON.stringify({ 
-                                title: mode === 'chat' ? 'AI 回答' : 'AI 分析结果', 
+                                title: pathname === '/api/conversation' ? 'AI 对话' : (requestData.mode === 'chat' ? 'AI 回答' : 'AI 分析结果'), 
                                 summary: aiContent,
-                                provider: '通义千问',
-                                mode: mode
+                                provider: '通义千问'
                             }),
                             { headers: { 'Content-Type': 'application/json' } }
                         );

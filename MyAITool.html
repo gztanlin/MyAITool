@@ -278,6 +278,71 @@
         }
         
         .hidden { display: none !important; }
+
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chat-message {
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .chat-message.assistant {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.6;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+
+        .chat-message.user .message-bubble {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.assistant .message-bubble {
+            background: white;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container textarea {
+            flex: 1;
+            min-height: 60px !important;
+            max-height: 120px;
+            resize: vertical;
+        }
+
+        .chat-input-container button {
+            align-self: flex-end;
+            white-space: nowrap;
+            padding: 14px 24px;
+        }
         
         @media (max-width: 768px) {
             body {
@@ -399,8 +464,9 @@
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">� AI问答</button>
-            <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">� 内容分析</button>
+            <button class="mode-tab" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
+            <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
+            <button class="mode-tab active" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
         </div>
 
         <div class="card">
@@ -443,7 +509,7 @@
                 </div>
             </div>
 
-            <div id="chatMode">
+            <div id="chatMode" class="hidden">
                 <div class="tip-box">
                     <div class="tip-title">💡 AI问答可以做什么</div>
                     <ul>
@@ -463,8 +529,31 @@
                 </div>
             </div>
 
+            <div id="conversationMode">
+                <div class="tip-box">
+                    <div class="tip-title">💡 AI对话功能</div>
+                    <ul>
+                        <li>与AI进行多轮对话</li>
+                        <li>支持查看对话历史</li>
+                        <li>上下文理解更准确</li>
+                        <li>连续提问更方便</li>
+                    </ul>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message assistant">
+                        <div class="message-bubble">你好！我是你的AI助手，有什么可以帮助你的吗？</div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <textarea id="conversationInput" placeholder="请输入你的消息..." style="min-height: 60px;"></textarea>
+                    <button class="submit-btn" id="sendMessageBtn" style="width: auto;">发送</button>
+                </div>
+            </div>
+
             <button class="submit-btn" id="submitBtn">
-                <span id="btnIcon">�</span>
+                <span id="btnIcon">💬</span>
                 <span id="btnText">提问</span>
             </button>
 
@@ -514,25 +603,40 @@
         const summaryContent = document.getElementById('summaryContent');
         const analyzeMode = document.getElementById('analyzeMode');
         const chatMode = document.getElementById('chatMode');
+        const conversationMode = document.getElementById('conversationMode');
         const tabAnalyze = document.getElementById('tab-analyze');
         const tabChat = document.getElementById('tab-chat');
+        const tabConversation = document.getElementById('tab-conversation');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const conversationInput = document.getElementById('conversationInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        let conversationHistory = [];
 
         function switchMode(mode) {
             modeSelect.value = mode;
             
+            analyzeMode.classList.add('hidden');
+            chatMode.classList.add('hidden');
+            conversationMode.classList.add('hidden');
+            tabAnalyze.classList.remove('active');
+            tabChat.classList.remove('active');
+            tabConversation.classList.remove('active');
+            submitBtn.classList.remove('hidden');
+
             if (mode === 'chat') {
-                analyzeMode.classList.add('hidden');
                 chatMode.classList.remove('hidden');
-                tabAnalyze.classList.remove('active');
                 tabChat.classList.add('active');
                 btnText.textContent = '提问';
                 btnIcon.textContent = '💬';
                 loadingText.textContent = 'AI 正在思考，请稍候...';
+            } else if (mode === 'conversation') {
+                conversationMode.classList.remove('hidden');
+                tabConversation.classList.add('active');
+                submitBtn.classList.add('hidden');
             } else {
                 analyzeMode.classList.remove('hidden');
-                chatMode.classList.add('hidden');
                 tabAnalyze.classList.add('active');
-                tabChat.classList.remove('active');
                 btnText.textContent = '开始分析';
                 btnIcon.textContent = '🚀';
                 loadingText.textContent = 'AI 正在分析，请稍候...';
@@ -621,6 +725,65 @@
         urlInput.addEventListener('keypress', (e) => { 
             if (e.key === 'Enter' && modeSelect.value === 'analyze') analyze(); 
         });
+
+        async function sendMessage() {
+            const message = conversationInput.value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            conversationInput.value = '';
+
+            conversationHistory.push({ role: 'user', content: message });
+
+            loading.classList.add('show');
+            sendMessageBtn.disabled = true;
+            errorMessage.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/conversation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: conversationHistory })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '请求失败');
+                }
+
+                const aiMessage = data.summary;
+                addMessage('assistant', aiMessage);
+                conversationHistory.push({ role: 'assistant', content: aiMessage });
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loading.classList.remove('show');
+                sendMessageBtn.disabled = false;
+            }
+        }
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${role}`;
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = content;
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendMessageBtn.addEventListener('click', sendMessage);
+        
+        conversationInput.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(); 
+            }
+        });
+
+        switchMode('conversation');
     </script>
 </body>
 </html>
