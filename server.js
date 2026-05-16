@@ -689,8 +689,51 @@ export default {
         </div>
 
         <div class="card">
-            <input type="hidden" id="modeSelect" value="chat">
-            
+            <div id="chatMode" class="hidden">
+                <div class="tip-box">
+                    <div class="tip-title">💡 AI问答可以做什么</div>
+                    <ul>
+                        <li>解答各类问题</li>
+                        <li>提供建议和方案</li>
+                        <li>解释概念和原理</li>
+                        <li>协助写作和创作</li>
+                        <li>代码编写和调试</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        💬 你的问题
+                    </label>
+                    <textarea id="chatQuestionInput" placeholder="请输入你想问的问题..." style="min-height: 150px;"></textarea>
+                </div>
+
+                <button class="submit-btn" id="chatSubmitBtn" onclick="submitChat()">
+                    <span>💬</span>
+                    <span>提问</span>
+                </button>
+
+                <div class="loading" id="chatLoading">
+                    <div class="spinner"></div>
+                    <p>AI 正在思考，请稍候...</p>
+                </div>
+
+                <div class="error-message" id="chatErrorMessage">
+                    <span class="icon">❌</span>
+                    <span id="chatErrorText"></span>
+                </div>
+
+                <div class="result-container" id="chatResultContainer">
+                    <div class="result-header">
+                        <div class="result-title">
+                            <span id="chatResultIcon">💬</span>
+                            <span id="chatResultTitle">AI 回答</span>
+                        </div>
+                    </div>
+                    <div class="summary-content" id="chatSummaryContent"></div>
+                </div>
+            </div>
+
             <div id="analyzeMode" class="hidden">
                 <div class="tip-box">
                     <div class="tip-title">💡 内容分析可以做什么</div>
@@ -708,7 +751,7 @@ export default {
                         🌐 网页地址
                         <span class="badge">URL</span>
                     </label>
-                    <input type="url" id="urlInput" placeholder="请输入网页地址，例如：https://example.com/article">
+                    <input type="url" id="analyzeUrlInput" placeholder="请输入网页地址，例如：https://example.com/article">
                 </div>
 
                 <div class="form-group">
@@ -716,7 +759,7 @@ export default {
                         📝 内容文本
                         <span class="optional">可选</span>
                     </label>
-                    <textarea id="contentInput" placeholder="或者直接输入要分析的文本内容..."></textarea>
+                    <textarea id="analyzeContentInput" placeholder="或者直接输入要分析的文本内容..."></textarea>
                 </div>
 
                 <div class="form-group">
@@ -724,27 +767,32 @@ export default {
                         🎯 分析要求
                         <span class="optional">可选</span>
                     </label>
-                    <textarea id="promptInput" placeholder="请输入分析要求，例如：总结核心要点、提取关键数据等" style="min-height: 80px;"></textarea>
-                </div>
-            </div>
-
-            <div id="chatMode" class="hidden">
-                <div class="tip-box">
-                    <div class="tip-title">💡 AI问答可以做什么</div>
-                    <ul>
-                        <li>解答各类问题</li>
-                        <li>提供建议和方案</li>
-                        <li>解释概念和原理</li>
-                        <li>协助写作和创作</li>
-                        <li>代码编写和调试</li>
-                    </ul>
+                    <textarea id="analyzePromptInput" placeholder="请输入分析要求，例如：总结核心要点、提取关键数据等" style="min-height: 80px;"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>
-                        💬 你的问题
-                    </label>
-                    <textarea id="questionInput" placeholder="请输入你想问的问题..." style="min-height: 150px;"></textarea>
+                <button class="submit-btn" id="analyzeSubmitBtn" onclick="submitAnalyze()">
+                    <span>🚀</span>
+                    <span>开始分析</span>
+                </button>
+
+                <div class="loading" id="analyzeLoading">
+                    <div class="spinner"></div>
+                    <p>AI 正在分析，请稍候...</p>
+                </div>
+
+                <div class="error-message" id="analyzeErrorMessage">
+                    <span class="icon">❌</span>
+                    <span id="analyzeErrorText"></span>
+                </div>
+
+                <div class="result-container" id="analyzeResultContainer">
+                    <div class="result-header">
+                        <div class="result-title">
+                            <span id="analyzeResultIcon">📊</span>
+                            <span id="analyzeResultTitle">分析结果</span>
+                        </div>
+                    </div>
+                    <div class="summary-content" id="analyzeSummaryContent"></div>
                 </div>
             </div>
 
@@ -759,7 +807,7 @@ export default {
                     </ul>
                 </div>
 
-                <div class="chat-messages" id="chatMessages">
+                <div class="chat-messages" id="conversationMessages">
                     <div class="chat-message assistant">
                         <div class="message-bubble">你好！我是你的AI助手，有什么可以帮助你的吗？</div>
                     </div>
@@ -767,33 +815,18 @@ export default {
 
                 <div class="chat-input-container">
                     <textarea id="conversationInput" placeholder="请输入你的消息..." style="min-height: 60px;"></textarea>
-                    <button class="submit-btn" id="sendMessageBtn" style="width: auto;">发送</button>
+                    <button class="submit-btn" id="conversationSendBtn" style="width: auto;">发送</button>
                 </div>
-            </div>
 
-            <button class="submit-btn" id="submitBtn">
-                <span id="btnIcon">💬</span>
-                <span id="btnText">提问</span>
-            </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p id="loadingText">AI 正在思考，请稍候...</p>
-            </div>
-
-            <div class="error-message" id="errorMessage">
-                <span class="icon">❌</span>
-                <span id="errorText"></span>
-            </div>
-
-            <div class="result-container" id="resultContainer">
-                <div class="result-header">
-                    <div class="result-title">
-                        <span id="resultIcon">📊</span>
-                        <span id="resultTitle">分析结果</span>
-                    </div>
+                <div class="loading" id="conversationLoading">
+                    <div class="spinner"></div>
+                    <p>AI 正在思考，请稍候...</p>
                 </div>
-                <div class="summary-content" id="summaryContent"></div>
+
+                <div class="error-message" id="conversationErrorMessage">
+                    <span class="icon">❌</span>
+                    <span id="conversationErrorText"></span>
+                </div>
             </div>
         </div>
 
@@ -804,109 +837,82 @@ export default {
     </div>
 
     <script>
-        const modeSelect = document.getElementById('modeSelect');
-        const urlInput = document.getElementById('urlInput');
-        const contentInput = document.getElementById('contentInput');
-        const promptInput = document.getElementById('promptInput');
-        const questionInput = document.getElementById('questionInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const btnIcon = document.getElementById('btnIcon');
-        const loading = document.getElementById('loading');
-        const loadingText = document.getElementById('loadingText');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        const resultContainer = document.getElementById('resultContainer');
-        const resultTitle = document.getElementById('resultTitle');
-        const resultIcon = document.getElementById('resultIcon');
-        const summaryContent = document.getElementById('summaryContent');
-        const analyzeMode = document.getElementById('analyzeMode');
-        const chatMode = document.getElementById('chatMode');
-        const conversationMode = document.getElementById('conversationMode');
         const tabAnalyze = document.getElementById('tab-analyze');
         const tabChat = document.getElementById('tab-chat');
         const tabConversation = document.getElementById('tab-conversation');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const analyzeMode = document.getElementById('analyzeMode');
+        const chatMode = document.getElementById('chatMode');
+        const conversationMode = document.getElementById('conversationMode');
+
+        const chatQuestionInput = document.getElementById('chatQuestionInput');
+        const chatSubmitBtn = document.getElementById('chatSubmitBtn');
+        const chatLoading = document.getElementById('chatLoading');
+        const chatErrorMessage = document.getElementById('chatErrorMessage');
+        const chatErrorText = document.getElementById('chatErrorText');
+        const chatResultContainer = document.getElementById('chatResultContainer');
+        const chatResultTitle = document.getElementById('chatResultTitle');
+        const chatResultIcon = document.getElementById('chatResultIcon');
+        const chatSummaryContent = document.getElementById('chatSummaryContent');
+
+        const analyzeUrlInput = document.getElementById('analyzeUrlInput');
+        const analyzeContentInput = document.getElementById('analyzeContentInput');
+        const analyzePromptInput = document.getElementById('analyzePromptInput');
+        const analyzeSubmitBtn = document.getElementById('analyzeSubmitBtn');
+        const analyzeLoading = document.getElementById('analyzeLoading');
+        const analyzeErrorMessage = document.getElementById('analyzeErrorMessage');
+        const analyzeErrorText = document.getElementById('analyzeErrorText');
+        const analyzeResultContainer = document.getElementById('analyzeResultContainer');
+        const analyzeResultTitle = document.getElementById('analyzeResultTitle');
+        const analyzeResultIcon = document.getElementById('analyzeResultIcon');
+        const analyzeSummaryContent = document.getElementById('analyzeSummaryContent');
+
+        const conversationMessages = document.getElementById('conversationMessages');
         const conversationInput = document.getElementById('conversationInput');
-        const chatMessages = document.getElementById('chatMessages');
+        const conversationSendBtn = document.getElementById('conversationSendBtn');
+        const conversationLoading = document.getElementById('conversationLoading');
+        const conversationErrorMessage = document.getElementById('conversationErrorMessage');
+        const conversationErrorText = document.getElementById('conversationErrorText');
 
         let conversationHistory = [];
 
         function switchMode(mode) {
-            modeSelect.value = mode;
-            
             analyzeMode.classList.add('hidden');
             chatMode.classList.add('hidden');
             conversationMode.classList.add('hidden');
+            
             tabAnalyze.classList.remove('active');
             tabChat.classList.remove('active');
             tabConversation.classList.remove('active');
-            submitBtn.classList.remove('hidden');
 
             if (mode === 'chat') {
                 chatMode.classList.remove('hidden');
                 tabChat.classList.add('active');
-                btnText.textContent = '提问';
-                btnIcon.textContent = '💬';
-                loadingText.textContent = 'AI 正在思考，请稍候...';
             } else if (mode === 'conversation') {
                 conversationMode.classList.remove('hidden');
                 tabConversation.classList.add('active');
-                submitBtn.classList.add('hidden');
             } else {
                 analyzeMode.classList.remove('hidden');
                 tabAnalyze.classList.add('active');
-                btnText.textContent = '开始分析';
-                btnIcon.textContent = '🚀';
-                loadingText.textContent = 'AI 正在分析，请稍候...';
             }
-            
-            errorMessage.classList.remove('show');
-            resultContainer.classList.remove('show');
         }
 
-        async function analyze() {
-            const mode = modeSelect.value;
-            errorMessage.classList.remove('show');
-            resultContainer.classList.remove('show');
-            
-            let requestData = { mode };
-
-            if (mode === 'chat') {
-                const question = questionInput.value.trim();
-                if (!question) {
-                    showError('请输入问题');
-                    return;
-                }
-                requestData.question = question;
-            } else {
-                const url = urlInput.value.trim();
-                const content = contentInput.value.trim();
-                const prompt = promptInput.value.trim();
-
-                if (!url && !content) {
-                    showError('请输入网页地址或内容文本');
-                    return;
-                }
-
-                if (url && content) {
-                    showError('请只选择网页地址或内容文本，不要同时输入');
-                    return;
-                }
-
-                requestData.url = url;
-                requestData.content = content;
-                requestData.prompt = prompt;
+        async function submitChat() {
+            const question = chatQuestionInput.value.trim();
+            if (!question) {
+                showChatError('请输入问题');
+                return;
             }
 
-            loading.classList.add('show');
-            submitBtn.disabled = true;
+            chatLoading.classList.add('show');
+            chatSubmitBtn.disabled = true;
+            chatErrorMessage.classList.remove('show');
+            chatResultContainer.classList.remove('show');
 
             try {
                 const response = await fetch('/api/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
+                    body: JSON.stringify({ mode: 'chat', question })
                 });
 
                 const data = await response.json();
@@ -916,47 +922,97 @@ export default {
                 }
 
                 if (data.title === '错误') {
-                    resultTitle.textContent = '错误';
-                    resultIcon.textContent = '❌';
-                    summaryContent.textContent = data.summary;
+                    chatResultTitle.textContent = '错误';
+                    chatResultIcon.textContent = '❌';
+                    chatSummaryContent.textContent = data.summary;
                 } else {
-                    resultTitle.textContent = mode === 'chat' ? 'AI 回答' : '分析结果';
-                    resultIcon.textContent = mode === 'chat' ? '💬' : '📊';
-                    summaryContent.textContent = data.summary;
+                    chatResultTitle.textContent = 'AI 回答';
+                    chatResultIcon.textContent = '💬';
+                    chatSummaryContent.textContent = data.summary;
                 }
-                resultContainer.classList.add('show');
+                chatResultContainer.classList.add('show');
 
             } catch (error) {
-                showError(error.message);
+                showChatError(error.message);
             } finally {
-                loading.classList.remove('show');
-                submitBtn.disabled = false;
+                chatLoading.classList.remove('show');
+                chatSubmitBtn.disabled = false;
             }
         }
 
-        function showError(message) {
-            errorText.textContent = message;
-            errorMessage.classList.add('show');
+        function showChatError(message) {
+            chatErrorText.textContent = message;
+            chatErrorMessage.classList.add('show');
         }
 
-        submitBtn.addEventListener('click', analyze);
-        
-        urlInput.addEventListener('keypress', (e) => { 
-            if (e.key === 'Enter' && modeSelect.value === 'analyze') analyze(); 
-        });
+        async function submitAnalyze() {
+            const url = analyzeUrlInput.value.trim();
+            const content = analyzeContentInput.value.trim();
+            const prompt = analyzePromptInput.value.trim();
 
-        async function sendMessage() {
+            if (!url && !content) {
+                showAnalyzeError('请输入网页地址或内容文本');
+                return;
+            }
+
+            if (url && content) {
+                showAnalyzeError('请只选择网页地址或内容文本，不要同时输入');
+                return;
+            }
+
+            analyzeLoading.classList.add('show');
+            analyzeSubmitBtn.disabled = true;
+            analyzeErrorMessage.classList.remove('show');
+            analyzeResultContainer.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'analyze', url, content, prompt })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '请求失败');
+                }
+
+                if (data.title === '错误') {
+                    analyzeResultTitle.textContent = '错误';
+                    analyzeResultIcon.textContent = '❌';
+                    analyzeSummaryContent.textContent = data.summary;
+                } else {
+                    analyzeResultTitle.textContent = '分析结果';
+                    analyzeResultIcon.textContent = '📊';
+                    analyzeSummaryContent.textContent = data.summary;
+                }
+                analyzeResultContainer.classList.add('show');
+
+            } catch (error) {
+                showAnalyzeError(error.message);
+            } finally {
+                analyzeLoading.classList.remove('show');
+                analyzeSubmitBtn.disabled = false;
+            }
+        }
+
+        function showAnalyzeError(message) {
+            analyzeErrorText.textContent = message;
+            analyzeErrorMessage.classList.add('show');
+        }
+
+        async function sendConversation() {
             const message = conversationInput.value.trim();
             if (!message) return;
 
-            addMessage('user', message);
+            addConversationMessage('user', message);
             conversationInput.value = '';
-
             conversationHistory.push({ role: 'user', content: message });
 
-            loading.classList.add('show');
-            sendMessageBtn.disabled = true;
-            errorMessage.classList.remove('show');
+            conversationLoading.classList.add('show');
+            conversationSendBtn.disabled = true;
+            conversationErrorMessage.classList.remove('show');
 
             try {
                 const response = await fetch('/api/conversation', {
@@ -972,33 +1028,40 @@ export default {
                 }
 
                 const aiMessage = data.summary;
-                addMessage('assistant', aiMessage);
+                addConversationMessage('assistant', aiMessage);
                 conversationHistory.push({ role: 'assistant', content: aiMessage });
             } catch (error) {
-                showError(error.message);
+                showConversationError(error.message);
             } finally {
-                loading.classList.remove('show');
-                sendMessageBtn.disabled = false;
+                conversationLoading.classList.remove('show');
+                conversationSendBtn.disabled = false;
             }
         }
 
-        function addMessage(role, content) {
+        function addConversationMessage(role, content) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = \`chat-message \${role}\`;
+            messageDiv.className = `chat-message ${role}`;
             const bubbleDiv = document.createElement('div');
             bubbleDiv.className = 'message-bubble';
             bubbleDiv.textContent = content;
             messageDiv.appendChild(bubbleDiv);
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            conversationMessages.appendChild(messageDiv);
+            conversationMessages.scrollTop = conversationMessages.scrollHeight;
         }
 
-        sendMessageBtn.addEventListener('click', sendMessage);
-        
+        function showConversationError(message) {
+            conversationErrorText.textContent = message;
+            conversationErrorMessage.classList.add('show');
+        }
+
+        chatSubmitBtn.addEventListener('click', submitChat);
+        analyzeSubmitBtn.addEventListener('click', submitAnalyze);
+        conversationSendBtn.addEventListener('click', sendConversation);
+
         conversationInput.addEventListener('keypress', (e) => { 
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage(); 
+                sendConversation(); 
             }
         });
 
