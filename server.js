@@ -847,6 +847,8 @@ export default {
         .header { text-align: center; color: white; margin-bottom: 40px; }
         .header h1 { font-size: 2.6rem; margin-bottom: 15px; font-weight: 700; }
         .header p { opacity: 0.95; font-size: 1.1rem; }
+        .header-link { opacity: 0.95; font-size: 1.1rem; color: #bfdbfe; text-decoration: none; transition: color 0.2s ease; }
+        .header-link:hover { color: white; text-decoration: underline; }
         
         .mode-tabs {
             display: flex;
@@ -1189,6 +1191,16 @@ export default {
             .header p {
                 font-size: 0.95rem;
             }
+            .header-link {
+                font-size: 0.95rem;
+                color: #3b82f6;
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+            .header-link:hover {
+                color: #2563eb;
+                text-decoration: underline;
+            }
             .card {
                 padding: 20px 18px;
                 border-radius: 16px;
@@ -1290,7 +1302,7 @@ export default {
     <div class="container">
         <div class="header">
             <h1>🤖 我的AI工具</h1>
-            <p>智能内容分析与 AI 问答助手</p>
+            <a href="/feedback" class="header-link">💬 留言交流</a>
         </div>
 
         <div class="mode-tabs">
