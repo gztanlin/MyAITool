@@ -374,6 +374,18 @@
             margin-bottom: 4px;
             color: #4b5563;
         }
+        .footer-link {
+            display: inline-block;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 8px;
+            transition: color 0.2s ease;
+        }
+        .footer-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
         
         .hidden { display: none !important; }
 
@@ -713,7 +725,7 @@
         </div>
 
         <div class="footer">
-            <button class="feedback-btn" id="feedbackBtn" onclick="openFeedbackModal()">✉️ 给我留言</button>
+            <a href="/feedback" class="footer-link">✉️ 给我留言</a>
             <div>AI 服务由通义千问提供</div>
             <div class="brand">POWER BY TANLIN@2026</div>
         </div>
