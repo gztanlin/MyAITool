@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "local": "node local-server.js",
     "build": "echo 'Build completed'"
   },
   "dependencies": {
