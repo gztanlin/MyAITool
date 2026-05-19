@@ -1023,13 +1023,13 @@ export default {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 我的AI工具</h1>
+            <h1>🤖 我的 AI 助手</h1>
             <a href="/feedback" class="header-link">💬 留言交流</a>
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
-            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
+            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI 问答</button>
+            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI 对话</button>
             <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
         </div>
 
@@ -2170,20 +2170,20 @@ export default {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 我的AI工具</h1>
+            <h1>🤖 我的 AI 助手</h1>
             <a href="/feedback" class="header-link">💬 留言交流</a>
         </div>
 
         <div class="mode-tabs">
-            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI问答</button>
-            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI对话</button>
+            <button class="mode-tab active" id="tab-chat" onclick="switchMode('chat')">💬 AI 问答</button>
+            <button class="mode-tab" id="tab-conversation" onclick="switchMode('conversation')">🤖 AI 对话</button>
             <button class="mode-tab" id="tab-analyze" onclick="switchMode('analyze')">📝 内容分析</button>
         </div>
 
         <div class="card">
             <div id="chatMode">
                 <div class="tip-box">
-                    <div class="tip-title">💡 AI问答可以做什么</div>
+                    <div class="tip-title">💡 AI 问答可以做什么</div>
                     <ul>
                         <li>解答各类问题</li>
                         <li>提供建议和方案</li>
