@@ -73,7 +73,7 @@ export default {
                         time: getCurrentTime(),
                         timestamp: Date.now()
                     };
-                    const messages = await getMessagesFromKV();
+                    let messages = await getMessagesFromKV();
                     messages.push(newMessage);
                     if (messages.length > 100) {
                         messages = messages.slice(-100);
