@@ -690,10 +690,28 @@ app.get('/', (req, res) => {
                     body: JSON.stringify({ mode: 'chat', question })
                 });
 
-                const data = await response.json();
-
+                const text = await response.text();
+                
                 if (!response.ok) {
-                    throw new Error(data.error || '请求失败');
+                    let errorMsg = '请求失败';
+                    try {
+                        const errorData = JSON.parse(text);
+                        errorMsg = errorData.error || errorData.summary || errorMsg;
+                    } catch (e) {
+                        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                            errorMsg = '服务器错误，请稍后重试';
+                        } else {
+                            errorMsg = text.substring(0, 100) || errorMsg;
+                        }
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('响应格式错误，请稍后重试');
                 }
 
                 if (data.title === '错误') {
@@ -764,10 +782,28 @@ app.get('/', (req, res) => {
                     })
                 });
 
-                const data = await response.json();
-
+                const text = await response.text();
+                
                 if (!response.ok) {
-                    throw new Error(data.error || '请求失败');
+                    let errorMsg = '请求失败';
+                    try {
+                        const errorData = JSON.parse(text);
+                        errorMsg = errorData.error || errorData.summary || errorMsg;
+                    } catch (e) {
+                        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                            errorMsg = '服务器错误，请稍后重试';
+                        } else {
+                            errorMsg = text.substring(0, 100) || errorMsg;
+                        }
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('响应格式错误，请稍后重试');
                 }
 
                 if (data.title === '错误') {
@@ -823,10 +859,28 @@ app.get('/', (req, res) => {
                     body: JSON.stringify({ history: conversationHistory })
                 });
 
-                const data = await response.json();
-
+                const text = await response.text();
+                
                 if (!response.ok) {
-                    throw new Error(data.error || '请求失败');
+                    let errorMsg = '请求失败';
+                    try {
+                        const errorData = JSON.parse(text);
+                        errorMsg = errorData.error || errorData.message || errorMsg;
+                    } catch (e) {
+                        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                            errorMsg = '服务器错误，请稍后重试';
+                        } else {
+                            errorMsg = text.substring(0, 100) || errorMsg;
+                        }
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('响应格式错误，请稍后重试');
                 }
 
                 const aiMessage = data.summary;
