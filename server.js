@@ -1,6 +1,7 @@
 let feedbackMessages = [];
 let chatMessages = [];
 let onlineUsers = new Set();
+const CHAT_KV_KEY = 'lq_chat_messages';
 
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
@@ -9,6 +10,31 @@ function generateId() {
 function getCurrentTime() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+}
+
+async function getMessagesFromKV() {
+    try {
+        if (typeof CHAT_STORE !== 'undefined') {
+            const data = await CHAT_STORE.get(CHAT_KV_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+    } catch (e) {
+        console.log('KV not available, using memory');
+    }
+    return chatMessages;
+}
+
+async function saveMessagesToKV(messages) {
+    try {
+        if (typeof CHAT_STORE !== 'undefined') {
+            await CHAT_STORE.put(CHAT_KV_KEY, JSON.stringify(messages));
+            return true;
+        }
+    } catch (e) {
+        console.log('KV not available');
+    }
+    chatMessages = messages;
+    return false;
 }
 
 export default {
@@ -32,8 +58,9 @@ export default {
         
         if (pathname === '/api/chat/messages') {
             if (method === 'GET') {
+                const messages = await getMessagesFromKV();
                 return new Response(
-                    JSON.stringify({ success: true, messages: chatMessages, onlineCount: onlineUsers.size }),
+                    JSON.stringify({ success: true, messages: messages, onlineCount: onlineUsers.size }),
                     { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                 );
             } else if (method === 'POST') {
@@ -46,10 +73,12 @@ export default {
                         time: getCurrentTime(),
                         timestamp: Date.now()
                     };
-                    chatMessages.push(newMessage);
-                    if (chatMessages.length > 100) {
-                        chatMessages = chatMessages.slice(-100);
+                    const messages = await getMessagesFromKV();
+                    messages.push(newMessage);
+                    if (messages.length > 100) {
+                        messages = messages.slice(-100);
                     }
+                    await saveMessagesToKV(messages);
                     return new Response(
                         JSON.stringify({ success: true, message: newMessage }),
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
@@ -424,44 +453,37 @@ export default {
         style.textContent = '@keyframes floatHeart { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }';
         document.head.appendChild(style);
         
-        let userId = localStorage.getItem('chatUserId') || 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('chatUserId', userId);
-        
-        async function loadMessages() {
-            const stored = localStorage.getItem('lqChatMessages');
-            const messages = stored ? JSON.parse(stored) : [];
-            const messagesContainer = document.getElementById('chatMessages');
-            document.getElementById('onlineCount').textContent = '在线: 1';
-            
-            let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-            messages.forEach(function(msg) {
-                html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
-            });
-            messagesContainer.innerHTML = html;
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const content = input.value.trim();
             if (!content) return;
             
-            const stored = localStorage.getItem('lqChatMessages');
-            const messages = stored ? JSON.parse(stored) : [];
-            
-            const newMsg = {
-                id: Date.now().toString(),
-                user: '💕 访客',
-                content: content,
-                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-            };
-            
-            messages.push(newMsg);
-            if (messages.length > 100) messages.shift();
-            localStorage.setItem('lqChatMessages', JSON.stringify(messages));
-            
-            input.value = '';
-            loadMessages();
+            const response = await fetch('/api/chat/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: '💕 访客', content: content })
+            });
+            const data = await response.json();
+            if (data.success) {
+                input.value = '';
+                loadMessages();
+            }
+        }
+        
+        async function loadMessages() {
+            const response = await fetch('/api/chat/messages');
+            const data = await response.json();
+            if (data.success) {
+                const messagesContainer = document.getElementById('chatMessages');
+                document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
+                
+                let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
+                data.messages.forEach(function(msg) {
+                    html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
+                });
+                messagesContainer.innerHTML = html;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
@@ -470,6 +492,7 @@ export default {
         });
         
         loadMessages();
+        setInterval(loadMessages, 2000);
     </script>
 </body>
 </html>`,
