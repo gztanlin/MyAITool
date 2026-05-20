@@ -171,11 +171,11 @@ app.get('/lq', (req, res) => {
         
         body {
             min-height: 100vh;
-            background: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=close%20up%20of%20beautiful%20red%20rose%20petals%20soft%20romantic%20lighting%20elegant%20background&image_size=landscape_16_9'), linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            background: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=close%20up%20of%20beautiful%20red%20rose%20petals%20soft%20romantic%20lighting%20elegant%20background%20pink%20aesthetic&image_size=landscape_16_9');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-blend-mode: overlay;
+            background-attachment: fixed;
             font-family: 'Georgia', 'Times New Roman', serif;
             overflow-x: hidden;
             position: relative;
