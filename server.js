@@ -1,4 +1,5 @@
 let feedbackMessages = [];
+let chatMessages = [];
 
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
@@ -42,29 +43,21 @@ export default {
                         timestamp: Date.now()
                     };
                     
-                    let messages = [];
+                    chatMessages.push(newMessage);
+                    if (chatMessages.length > 100) {
+                        chatMessages = chatMessages.slice(-100);
+                    }
+                    
                     try {
-                        const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
-                        if (stored) {
-                            messages = JSON.parse(stored);
+                        if (typeof CHAT_STORE !== 'undefined') {
+                            await CHAT_STORE.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
                         }
-                    } catch (e) {
-                        console.log('KV not available, using memory');
-                    }
-                    
-                    messages.push(newMessage);
-                    if (messages.length > 100) {
-                        messages = messages.slice(-100);
-                    }
-                    
-                    try {
-                        await CHAT_STORE.put(CHAT_STORE_KEY, JSON.stringify(messages));
                     } catch (e) {
                         console.log('KV put failed:', e);
                     }
                     
                     return new Response(
-                        JSON.stringify({ success: true, message: newMessage, total: messages.length }),
+                        JSON.stringify({ success: true, message: newMessage, total: chatMessages.length }),
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                     );
                 } catch (e) {
@@ -74,18 +67,19 @@ export default {
                     );
                 }
             } else if (method === 'GET') {
-                let messages = [];
                 try {
-                    const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
-                    if (stored) {
-                        messages = JSON.parse(stored);
+                    if (typeof CHAT_STORE !== 'undefined') {
+                        const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
+                        if (stored) {
+                            chatMessages = JSON.parse(stored);
+                        }
                     }
                 } catch (e) {
-                    console.log('KV not available:', e);
+                    console.log('KV get failed:', e);
                 }
                 
                 return new Response(
-                    JSON.stringify({ success: true, messages: messages, onlineCount: messages.length }),
+                    JSON.stringify({ success: true, messages: chatMessages, onlineCount: chatMessages.length }),
                     { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                 );
             }
@@ -535,11 +529,12 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    await fetchMessages();
+                    setTimeout(() => {
+                        fetchMessages();
+                    }, 500);
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
-                alert('发送失败，请重试');
             }
         }
         
