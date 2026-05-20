@@ -7,6 +7,7 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 let feedbackMessages = [];
 
@@ -171,14 +172,57 @@ app.get('/lq', (req, res) => {
         
         body {
             min-height: 100vh;
-            background: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=close%20up%20of%20beautiful%20red%20rose%20petals%20soft%20romantic%20lighting%20elegant%20background%20pink%20aesthetic&image_size=landscape_16_9');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ffc8dd 25%, #ff9a9e 50%, #fecfef 75%, #ff6b9d 100%);
             font-family: 'Georgia', 'Times New Roman', serif;
             overflow-x: hidden;
             position: relative;
+        }
+        
+        .petal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .petal {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 50%, #ffc8dd 100%);
+            border-radius: 50% 0 50% 50%;
+            opacity: 0.7;
+            animation: float 8s infinite ease-in-out;
+            box-shadow: 0 2px 10px rgba(255, 107, 157, 0.3);
+        }
+        
+        .petal:nth-child(odd) {
+            background: linear-gradient(135deg, #ff8fab 0%, #ffa8b8 50%, #ffc8dd 100%);
+            border-radius: 0 50% 50% 50%;
+        }
+        
+        .petal:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; transform: rotate(30deg); }
+        .petal:nth-child(2) { top: 20%; left: 80%; animation-delay: 1s; transform: rotate(60deg); }
+        .petal:nth-child(3) { top: 30%; left: 20%; animation-delay: 2s; transform: rotate(90deg); }
+        .petal:nth-child(4) { top: 40%; left: 60%; animation-delay: 3s; transform: rotate(120deg); }
+        .petal:nth-child(5) { top: 50%; left: 30%; animation-delay: 4s; transform: rotate(150deg); }
+        .petal:nth-child(6) { top: 60%; left: 70%; animation-delay: 5s; transform: rotate(180deg); }
+        .petal:nth-child(7) { top: 70%; left: 40%; animation-delay: 6s; transform: rotate(210deg); }
+        .petal:nth-child(8) { top: 80%; left: 50%; animation-delay: 7s; transform: rotate(240deg); }
+        .petal:nth-child(9) { top: 15%; left: 50%; animation-delay: 0.5s; transform: rotate(270deg); }
+        .petal:nth-child(10) { top: 85%; left: 25%; animation-delay: 1.5s; transform: rotate(300deg); }
+        .petal:nth-child(11) { top: 25%; left: 40%; animation-delay: 2.5s; transform: rotate(330deg); }
+        .petal:nth-child(12) { top: 75%; left: 75%; animation-delay: 3.5s; transform: rotate(15deg); }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.7; }
+            25% { transform: translateY(-20px) rotate(20deg) scale(1.1); opacity: 0.8; }
+            50% { transform: translateY(-10px) rotate(-10deg) scale(0.9); opacity: 0.6; }
+            75% { transform: translateY(-30px) rotate(10deg) scale(1.05); opacity: 0.75; }
         }
         
         /* 背景粒子 */
@@ -250,6 +294,21 @@ app.get('/lq', (req, res) => {
             font-style: italic;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(233,30,99,0.4);
             font-weight: 500;
+        }
+        
+        .rose-image {
+            margin: 20px auto;
+            max-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 4px solid rgba(255,255,255,0.8);
+        }
+        
+        .rose-image img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         
         .heart-line {
@@ -410,12 +469,29 @@ app.get('/lq', (req, res) => {
     </style>
 </head>
 <body>
+    <div class="petal-container">
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+    </div>
     <div class="particles" id="particles"></div>
     
     <div class="container">
         <div class="header">
             <h1 class="title">💕 520 💕</h1>
             <p class="subtitle">致我最爱的人LQQ</p>
+            <div class="rose-image">
+                <img src="/images/rose-petals.jpg" alt="玫瑰花瓣" />
+            </div>
             <div class="heart-line"></div>
         </div>
         
@@ -955,8 +1031,7 @@ app.get('/', (req, res) => {
         <div class="header">
             <h1>🤖 我的 AI 助手</h1>
             <div class="header-links">
-                <a href="/lq" class="header-link">💕 520</a>
-                <a href="/feedback" class="header-link">💬 留言交流</a>
+                <a href="/lq" class="header-link">💌 查收520专属浪漫</a>
             </div>
         </div>
 
