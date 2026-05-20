@@ -10,8 +10,157 @@ app.use(express.json());
 
 let feedbackMessages = [];
 
-// 520 情人节浪漫页面
+// 520 情人节浪漫页面 - 带密码保护
 app.get('/lq', (req, res) => {
+    const password = req.query.pass;
+    const correctPassword = 'lqq';
+    
+    // 如果密码不正确，显示密码输入页面
+    if (password !== correctPassword) {
+        const loginHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 请输入密码</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            font-family: 'Georgia', 'Times New Roman', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 60px 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .lock-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .title {
+            font-size: 2rem;
+            color: #e91e63;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #ffb6c1;
+            border-radius: 15px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .password-input:focus {
+            border-color: #e91e63;
+            box-shadow: 0 0 20px rgba(233,30,99,0.3);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #e91e63, #c2185b);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(233,30,99,0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(233,30,99,0.4);
+        }
+        
+        .error-message {
+            margin-top: 15px;
+            color: #f44336;
+            font-size: 0.95rem;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .hint {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="lock-icon">🔐</div>
+        <h1 class="title">💕 请输入密码</h1>
+        <p class="subtitle">这是一个专属的浪漫页面</p>
+        
+        <input type="password" id="password" class="password-input" placeholder="请输入密码" />
+        <button class="submit-btn" onclick="checkPassword()">解锁浪漫 💝</button>
+        
+        <div class="error-message" id="error">密码错误，请重试</div>
+        <p class="hint">💡 提示：520</p>
+    </div>
+    
+    <script>
+        function checkPassword() {
+            const password = document.getElementById('password').value;
+            const error = document.getElementById('error');
+            
+            if (password === 'lqq') {
+                window.location.href = '/lq?pass=lqq';
+            } else {
+                error.classList.add('show');
+                setTimeout(() => error.classList.remove('show'), 3000);
+            }
+        }
+        
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    </script>
+</body>
+</html>`;
+        res.send(loginHtml);
+        return;
+    }
+    
+    // 密码正确，显示浪漫页面
     const loveHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
