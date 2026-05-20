@@ -1,4 +1,15 @@
 let feedbackMessages = [];
+let chatMessages = [];
+let onlineUsers = new Set();
+
+function generateId() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+}
 
 export default {
     async fetch(req) {
@@ -17,6 +28,58 @@ export default {
                 JSON.stringify({ status: 'ok', message: 'Server running' }),
                 { headers: { 'Content-Type': 'application/json' } }
             );
+        }
+        
+        if (pathname === '/api/chat/messages') {
+            if (method === 'GET') {
+                return new Response(
+                    JSON.stringify({ success: true, messages: chatMessages, onlineCount: onlineUsers.size }),
+                    { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                );
+            } else if (method === 'POST') {
+                try {
+                    const body = await req.json();
+                    const newMessage = {
+                        id: generateId(),
+                        user: body.user || '匿名用户',
+                        content: body.content,
+                        time: getCurrentTime(),
+                        timestamp: Date.now()
+                    };
+                    chatMessages.push(newMessage);
+                    if (chatMessages.length > 100) {
+                        chatMessages = chatMessages.slice(-100);
+                    }
+                    return new Response(
+                        JSON.stringify({ success: true, message: newMessage }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                } catch (e) {
+                    return new Response(
+                        JSON.stringify({ success: false, error: 'Invalid request' }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                }
+            }
+        }
+        
+        if (pathname === '/api/chat/online') {
+            if (method === 'POST') {
+                try {
+                    const body = await req.json();
+                    const userId = body.userId || generateId();
+                    onlineUsers.add(userId);
+                    return new Response(
+                        JSON.stringify({ success: true, onlineCount: onlineUsers.size }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                } catch (e) {
+                    return new Response(
+                        JSON.stringify({ success: false, error: 'Invalid request' }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                }
+            }
         }
         
         if (pathname === '/lq') {
@@ -200,6 +263,77 @@ export default {
         .signature {
             margin-top: 30px; font-size: 1.2rem; color: #999; font-style: italic;
         }
+        .chat-container {
+            background: rgba(255,255,255,0.95); border-radius: 30px;
+            padding: 30px; margin-top: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .chat-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px;
+            border-bottom: 2px solid #ffc8dd;
+        }
+        .chat-header h3 {
+            font-size: 1.8rem; color: #e91e63; margin: 0;
+        }
+        .online-count {
+            background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+            color: white; padding: 8px 20px; border-radius: 20px;
+            font-size: 1rem; font-weight: bold;
+        }
+        .chat-messages {
+            height: 300px; overflow-y: auto;
+            padding: 15px; background: rgba(255, 240, 245, 0.5);
+            border-radius: 20px; margin-bottom: 20px;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #ffe4ec; border-radius: 3px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ff8fab; border-radius: 3px;
+        }
+        .message {
+            margin-bottom: 15px; padding: 12px 18px;
+            background: linear-gradient(135deg, #fff, #ffe4ec);
+            border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .message-user {
+            font-weight: bold; color: #e91e63; margin-bottom: 5px;
+        }
+        .message-content {
+            color: #333; line-height: 1.5;
+        }
+        .message-time {
+            font-size: 0.8rem; color: #999; margin-top: 5px;
+        }
+        .system-message {
+            text-align: center; color: #ff6b9d;
+            font-style: italic; padding: 10px;
+        }
+        .chat-input {
+            display: flex; gap: 15px;
+        }
+        .chat-input input {
+            flex: 1; padding: 15px 25px;
+            border: none; border-radius: 30px;
+            background: rgba(255, 240, 245, 0.8);
+            font-size: 1rem; outline: none;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .chat-input button {
+            padding: 15px 30px; background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+            color: white; border: none; border-radius: 30px;
+            font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+        }
+        .chat-input button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.5);
+        }
         .footer { text-align: center; margin-top: 50px; color: rgba(255,255,255,0.9); }
         .back-btn {
             display: inline-block; margin-top: 30px;
@@ -253,6 +387,21 @@ export default {
             </p>
             <p class="signature">—— 永远爱你的人</p>
         </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>💬 浪漫聊天室</h3>
+                <span class="online-count" id="onlineCount">在线: 0</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                <button id="sendBtn">发送 💌</button>
+            </div>
+        </div>
+        
         <div class="footer">
             <a href="/" class="back-btn">🏠 返回首页</a>
         </div>
@@ -274,6 +423,66 @@ export default {
         const style = document.createElement('style');
         style.textContent = '@keyframes floatHeart { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }';
         document.head.appendChild(style);
+        
+        let userId = localStorage.getItem('chatUserId') || 'user_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('chatUserId', userId);
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            const response = await fetch('/api/chat/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: '💕 访客', content: content })
+            });
+            const data = await response.json();
+            if (data.success) {
+                input.value = '';
+                loadMessages();
+            }
+        }
+        
+        async function loadMessages() {
+            const response = await fetch('/api/chat/messages');
+            const data = await response.json();
+            if (data.success) {
+                const messagesContainer = document.getElementById('chatMessages');
+                document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
+                
+                let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
+                data.messages.forEach(msg => {
+                    html += `
+                        <div class="message">
+                            <div class="message-user">${msg.user}</div>
+                            <div class="message-content">${msg.content}</div>
+                            <div class="message-time">${msg.time}</div>
+                        </div>
+                    `;
+                });
+                messagesContainer.innerHTML = html;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+        
+        async function updateOnline() {
+            await fetch('/api/chat/online', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId })
+            });
+        }
+        
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        loadMessages();
+        updateOnline();
+        setInterval(loadMessages, 3000);
+        setInterval(updateOnline, 10000);
     </script>
 </body>
 </html>`,
