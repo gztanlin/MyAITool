@@ -13,15 +13,46 @@ function getCurrentTime() {
 }
 
 async function getKVStore() {
+    console.log('Checking KV store availability...');
+    
     if (typeof CHAT_STORE !== 'undefined') {
+        console.log('CHAT_STORE is defined:', typeof CHAT_STORE);
+        console.log('CHAT_STORE methods:', Object.keys(CHAT_STORE));
+        
         if (typeof CHAT_STORE.get === 'function') {
+            console.log('Using CHAT_STORE.get');
             return CHAT_STORE;
-        } else if (typeof env !== 'undefined' && env[CHAT_STORE]) {
-            return env[CHAT_STORE];
-        } else if (typeof self !== 'undefined' && self[CHAT_STORE]) {
-            return self[CHAT_STORE];
+        } else if (typeof CHAT_STORE.getKV === 'function') {
+            console.log('Using CHAT_STORE.getKV');
+            return {
+                get: (key) => CHAT_STORE.getKV(key),
+                put: (key, value) => CHAT_STORE.putKV(key, value)
+            };
+        } else if (typeof CHAT_STORE.read === 'function') {
+            console.log('Using CHAT_STORE.read/write');
+            return {
+                get: (key) => CHAT_STORE.read(key),
+                put: (key, value) => CHAT_STORE.write(key, value)
+            };
+        } else if (typeof CHAT_STORE.getItem === 'function') {
+            console.log('Using CHAT_STORE.getItem/setItem');
+            return {
+                get: (key) => Promise.resolve(CHAT_STORE.getItem(key)),
+                put: (key, value) => Promise.resolve(CHAT_STORE.setItem(key, value))
+            };
         }
     }
+    
+    if (typeof env !== 'undefined' && env.CHAT_STORE) {
+        console.log('Found env.CHAT_STORE');
+        const store = env.CHAT_STORE;
+        if (typeof store.get === 'function') {
+            console.log('Using env.CHAT_STORE.get');
+            return store;
+        }
+    }
+    
+    console.log('KV store not available, returning null');
     return null;
 }
 
