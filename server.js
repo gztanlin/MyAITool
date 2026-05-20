@@ -169,12 +169,6 @@ export default {
         }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .subtitle { font-size: 1.5rem; color: #fff; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
-        .rose-image {
-            margin: 20px auto; max-width: 400px; border-radius: 20px;
-            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            border: 4px solid rgba(255,255,255,0.8);
-        }
-        .rose-image img { width: 100%; height: auto; display: block; }
         .heart-line { width: 100px; height: 3px; background: linear-gradient(90deg, transparent, #fff, transparent); margin: 30px auto; }
         .poem-card {
             background: rgba(255,255,255,0.95); border-radius: 30px;
@@ -227,9 +221,6 @@ export default {
         <div class="header">
             <h1 class="title">💕 520 💕</h1>
             <p class="subtitle">致我最爱的人LQQ</p>
-            <div class="rose-image">
-                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=close%20up%20of%20beautiful%20red%20rose%20petals%20soft%20romantic%20lighting%20elegant%20background%20pink%20aesthetic&image_size=landscape_4_3" alt="玫瑰花瓣" />
-            </div>
             <div class="heart-line"></div>
         </div>
         <div class="poem-card">
