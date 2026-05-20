@@ -151,7 +151,17 @@ export default {
             margin-bottom: 30px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
-        .password-input {
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .form-input {
             width: 100%;
             padding: 15px 20px;
             font-size: 1.2rem;
@@ -161,7 +171,7 @@ export default {
             transition: all 0.3s;
             text-align: center;
         }
-        .password-input:focus {
+        .form-input:focus {
             border-color: #ff6b9d;
             box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
         }
@@ -187,15 +197,26 @@ export default {
     <div class="login-container">
         <div class="lock-icon">🔐</div>
         <h1 class="title">💕 请输入密码</h1>
-        <input type="password" class="password-input" id="password" placeholder="请输入密码" />
+        <div class="form-group">
+            <label>你是谁？</label>
+            <input type="text" class="form-input" id="username" placeholder="请输入你的名字" />
+        </div>
+        <div class="form-group">
+            <label>请输入密码</label>
+            <input type="password" class="form-input" id="password" placeholder="请输入密码" />
+        </div>
         <button class="submit-btn" onclick="submitPassword()">解锁浪漫</button>
     </div>
     <script>
         function submitPassword() {
             const password = document.getElementById('password').value;
-            window.location.href = '/lq?pass=' + encodeURIComponent(password);
+            const username = document.getElementById('username').value.trim() || '匿名访客';
+            window.location.href = '/lq?pass=' + encodeURIComponent(password) + '&name=' + encodeURIComponent(username);
         }
         document.getElementById('password').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') submitPassword();
+        });
+        document.getElementById('username').addEventListener('keyup', function(e) {
             if (e.key === 'Enter') submitPassword();
         });
     </script>
@@ -436,6 +457,9 @@ export default {
         </div>
     </div>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('name') || '💕 访客';
+        
         const container = document.getElementById('particles');
         for(let i=0; i<30; i++) {
             const heart = document.createElement('div');
@@ -461,7 +485,7 @@ export default {
             const response = await fetch('/api/chat/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user: '💕 访客', content: content })
+                body: JSON.stringify({ user: username, content: content })
             });
             const data = await response.json();
             if (data.success) {
@@ -509,7 +533,9 @@ export default {
             const messagesContainer = document.getElementById('chatMessages');
             let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
             allMessages.forEach(function(msg) {
-                html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
+                const isMe = msg.user === username;
+                const messageClass = isMe ? 'message me' : 'message';
+                html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
             });
             messagesContainer.innerHTML = html;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
