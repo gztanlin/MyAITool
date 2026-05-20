@@ -9,14 +9,7 @@ function getCurrentTime() {
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 }
 
-function generateUserId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+const CHAT_STORE_KEY = 'lq_chat_messages';
 
 export default {
     async fetch(req) {
@@ -48,8 +41,30 @@ export default {
                         time: getCurrentTime(),
                         timestamp: Date.now()
                     };
+                    
+                    let messages = [];
+                    try {
+                        const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
+                        if (stored) {
+                            messages = JSON.parse(stored);
+                        }
+                    } catch (e) {
+                        console.log('KV not available, using memory');
+                    }
+                    
+                    messages.push(newMessage);
+                    if (messages.length > 100) {
+                        messages = messages.slice(-100);
+                    }
+                    
+                    try {
+                        await CHAT_STORE.put(CHAT_STORE_KEY, JSON.stringify(messages));
+                    } catch (e) {
+                        console.log('KV put failed:', e);
+                    }
+                    
                     return new Response(
-                        JSON.stringify({ success: true, message: newMessage }),
+                        JSON.stringify({ success: true, message: newMessage, total: messages.length }),
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                     );
                 } catch (e) {
@@ -59,8 +74,18 @@ export default {
                     );
                 }
             } else if (method === 'GET') {
+                let messages = [];
+                try {
+                    const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
+                    if (stored) {
+                        messages = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    console.log('KV not available:', e);
+                }
+                
                 return new Response(
-                    JSON.stringify({ success: true, messages: [], onlineCount: 0 }),
+                    JSON.stringify({ success: true, messages: messages, onlineCount: messages.length }),
                     { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                 );
             }
@@ -420,9 +445,7 @@ export default {
                 <button id="sendBtn">发送 💌</button>
             </div>
             <div class="share-buttons">
-                <button onclick="generateShareLink()" class="share-btn">🔗 生成分享链接</button>
-                <button onclick="copyShareLink()" class="share-btn">📋 复制链接</button>
-                <button onclick="clearChat()" class="share-btn">🗑️ 清空</button>
+                <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
             </div>
         </div>
         
@@ -451,12 +474,18 @@ export default {
         style.textContent = '@keyframes floatHeart { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }';
         document.head.appendChild(style);
         
-        function saveMessageToLocal(msg) {
-            const stored = localStorage.getItem('lqChatLocal');
-            const messages = stored ? JSON.parse(stored) : [];
-            messages.push(msg);
-            if (messages.length > 100) messages.shift();
-            localStorage.setItem('lqChatLocal', JSON.stringify(messages));
+        async function fetchMessages() {
+            try {
+                const response = await fetch('/api/chat/messages');
+                const data = await response.json();
+                if (data.success && data.messages) {
+                    localStorage.setItem('lqChatLocal', JSON.stringify(data.messages));
+                    loadMessages();
+                    document.getElementById('onlineCount').textContent = '💕 共 ' + data.messages.length + ' 条消息';
+                }
+            } catch (e) {
+                console.log('Fetch messages failed:', e);
+            }
         }
         
         function loadMessages() {
@@ -464,10 +493,9 @@ export default {
             const messages = stored ? JSON.parse(stored) : [];
             
             const messagesContainer = document.getElementById('chatMessages');
-            document.getElementById('onlineCount').textContent = '💕 共 ' + messages.length + ' 条消息';
             
             let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-            html += '<div class="system-message">📌 提示：刷新页面消息不会丢失哦~</div>';
+            html += '<div class="system-message">📌 所有用户都能看到彼此的消息哦~</div>';
             messages.forEach(function(msg) {
                 const isMe = msg.user === username;
                 const messageClass = isMe ? 'message me' : 'message';
@@ -482,62 +510,28 @@ export default {
             const content = input.value.trim();
             if (!content) return;
             
-            const newMsg = {
-                id: Date.now().toString(),
-                user: username,
-                content: content,
-                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                timestamp: Date.now()
-            };
-            
-            saveMessageToLocal(newMsg);
-            input.value = '';
-            loadMessages();
+            try {
+                const response = await fetch('/api/chat/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: username, content: content })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    input.value = '';
+                    await fetchMessages();
+                }
+            } catch (e) {
+                console.log('Send message failed:', e);
+                alert('发送失败，请重试');
+            }
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-        
-        let shareUrl = '';
-        
-        function generateShareLink() {
-            const stored = localStorage.getItem('lqChatLocal');
-            const messages = stored ? JSON.parse(stored) : [];
-            if (messages.length === 0) {
-                alert('还没有消息哦，先说点什么吧~');
-                return;
-            }
-            
-            const data = {
-                messages: messages,
-                time: new Date().toISOString()
-            };
-            
-            const encoded = btoa(JSON.stringify(data));
-            shareUrl = window.location.origin + '/lq?pass=lqq&name=' + encodeURIComponent(username) + '&share=' + encoded;
-            alert('分享链接已生成！点击"复制链接"按钮即可复制~');
-        }
-        
-        function copyShareLink() {
-            if (!shareUrl) {
-                generateShareLink();
-                if (!shareUrl) return;
-            }
-            
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('链接已复制到剪贴板！分享给你的爱人吧~');
-            }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = shareUrl;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('链接已复制到剪贴板！');
-            });
-        }
         
         function clearChat() {
             if (confirm('确定要清空所有聊天记录吗？')) {
@@ -546,44 +540,8 @@ export default {
             }
         }
         
-        function loadShareMessages() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const shareData = urlParams.get('share');
-            if (!shareData) return;
-            
-            try {
-                const decoded = atob(shareData);
-                const data = JSON.parse(decoded);
-                
-                if (data.messages && Array.isArray(data.messages)) {
-                    const stored = localStorage.getItem('lqChatLocal');
-                    const existingMessages = stored ? JSON.parse(stored) : [];
-                    const existingIds = new Set(existingMessages.map(m => m.id));
-                    
-                    let newCount = 0;
-                    data.messages.forEach(msg => {
-                        if (!existingIds.has(msg.id)) {
-                            existingMessages.push(msg);
-                            newCount++;
-                        }
-                    });
-                    
-                    if (existingMessages.length > 100) {
-                        existingMessages.splice(0, existingMessages.length - 100);
-                    }
-                    
-                    localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
-                    if (newCount > 0) {
-                        alert('成功接收 ' + newCount + ' 条新消息！');
-                    }
-                }
-            } catch (e) {
-                console.log('Failed to parse share data:', e);
-            }
-        }
-        
-        loadShareMessages();
-        loadMessages();
+        fetchMessages();
+        setInterval(fetchMessages, 3000);
     </script>
 </body>
 </html>`,
