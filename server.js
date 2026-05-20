@@ -255,22 +255,17 @@ export default {
         for(let i=0; i<30; i++) {
             const heart = document.createElement('div');
             heart.textContent = '❤️';
-            heart.style.cssText = `
-                position: absolute;
-                font-size: ${Math.random()*20+10}px;
-                left: ${Math.random()*100}%;
-                top: ${Math.random()*100}%;
-                opacity: ${Math.random()*0.5+0.3};
-                animation: floatHeart ${Math.random()*5+5}s infinite ease-in-out;
-                animation-delay: ${Math.random()*5}s;
-            `;
+            heart.style.position = 'absolute';
+            heart.style.fontSize = (Math.random()*20+10) + 'px';
+            heart.style.left = (Math.random()*100) + '%';
+            heart.style.top = (Math.random()*100) + '%';
+            heart.style.opacity = Math.random()*0.5+0.3;
+            heart.style.animation = 'floatHeart ' + (Math.random()*5+5) + 's infinite ease-in-out';
+            heart.style.animationDelay = (Math.random()*5) + 's';
             container.appendChild(heart);
         }
         const style = document.createElement('style');
-        style.textContent = `@keyframes floatHeart {
-            0%,100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(10deg); }
-        }`;
+        style.textContent = '@keyframes floatHeart { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }';
         document.head.appendChild(style);
     </script>
 </body>
