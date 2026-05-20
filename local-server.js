@@ -132,7 +132,6 @@ app.get('/lq', (req, res) => {
         <button class="submit-btn" onclick="checkPassword()">解锁浪漫 💝</button>
         
         <div class="error-message" id="error">密码错误，请重试</div>
-        <p class="hint">💡 提示：520</p>
     </div>
     
     <script>
