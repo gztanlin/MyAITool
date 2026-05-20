@@ -427,45 +427,41 @@ export default {
         let userId = localStorage.getItem('chatUserId') || 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('chatUserId', userId);
         
+        async function loadMessages() {
+            const stored = localStorage.getItem('lqChatMessages');
+            const messages = stored ? JSON.parse(stored) : [];
+            const messagesContainer = document.getElementById('chatMessages');
+            document.getElementById('onlineCount').textContent = '在线: 1';
+            
+            let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
+            messages.forEach(function(msg) {
+                html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
+            });
+            messagesContainer.innerHTML = html;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const content = input.value.trim();
             if (!content) return;
             
-            const response = await fetch('/api/chat/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user: '💕 访客', content: content })
-            });
-            const data = await response.json();
-            if (data.success) {
-                input.value = '';
-                loadMessages();
-            }
-        }
-        
-        async function loadMessages() {
-            const response = await fetch('/api/chat/messages');
-            const data = await response.json();
-            if (data.success) {
-                const messagesContainer = document.getElementById('chatMessages');
-                document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
-                
-                let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-                data.messages.forEach(function(msg) {
-                    html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
-                });
-                messagesContainer.innerHTML = html;
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        }
-        
-        async function updateOnline() {
-            await fetch('/api/chat/online', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: userId })
-            });
+            const stored = localStorage.getItem('lqChatMessages');
+            const messages = stored ? JSON.parse(stored) : [];
+            
+            const newMsg = {
+                id: Date.now().toString(),
+                user: '💕 访客',
+                content: content,
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+            
+            messages.push(newMsg);
+            if (messages.length > 100) messages.shift();
+            localStorage.setItem('lqChatMessages', JSON.stringify(messages));
+            
+            input.value = '';
+            loadMessages();
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
@@ -474,9 +470,6 @@ export default {
         });
         
         loadMessages();
-        updateOnline();
-        setInterval(loadMessages, 3000);
-        setInterval(updateOnline, 10000);
     </script>
 </body>
 </html>`,
