@@ -192,11 +192,19 @@ export default {
             text-align: center; font-size: 1.3rem; color: #ff6b9d;
             margin-top: 30px; font-weight: bold;
         }
-        .name-card { text-align: center; margin-top: 40px; }
-        .name {
-            font-size: 2.5rem; color: #ff6b9d;
-            text-shadow: 2px 2px 8px rgba(255, 107, 157, 0.5);
-            animation: pulse 2s ease-in-out infinite;
+        .footer-message {
+            text-align: center; margin-top: 40px; padding: 40px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .footer-message h2 {
+            font-size: 2.5rem; color: #e91e63; margin-bottom: 20px;
+        }
+        .footer-message p {
+            font-size: 1.4rem; color: #5d4037; line-height: 2;
+        }
+        .signature {
+            margin-top: 30px; font-size: 1.2rem; color: #999; font-style: italic;
         }
         .footer { text-align: center; margin-top: 50px; color: rgba(255,255,255,0.9); }
         .back-btn {
@@ -242,9 +250,17 @@ export default {
                 <p class="final-line">而你，是我生命中最长的温柔。💝</p>
             </div>
         </div>
-        <div class="name-card">
-            <div class="name">LQQ</div>
-            <p style="color: #fff; margin-top: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">爱你一万年</p>
+        <div class="footer-message">
+            <h2>💖 爱你一万年 💖</h2>
+            <p>
+                <span style="font-size: 2.5rem; color: #c2185b; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">LQQ</span><br><br>
+                在这个特别的日子里<br>
+                只想对你说：<br>
+                遇见你，是我最美的意外<br>
+                陪伴你，是我最长情的告白<br><br>
+                <strong>520，我爱你！</strong>
+            </p>
+            <p class="signature">—— 永远爱你的人</p>
         </div>
         <div class="footer">
             <a href="/" class="back-btn">🏠 返回首页</a>
