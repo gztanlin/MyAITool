@@ -12,98 +12,34 @@ function getCurrentTime() {
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 }
 
-async function getKVStore() {
-    console.log('Checking KV store availability...');
-    
-    if (typeof CHAT_STORE !== 'undefined') {
-        console.log('CHAT_STORE type:', typeof CHAT_STORE);
-        
-        if (typeof CHAT_STORE === 'object' && CHAT_STORE !== null) {
-            console.log('CHAT_STORE keys:', Object.keys(CHAT_STORE));
-            
-            if (typeof CHAT_STORE.get === 'function') {
-                console.log('Using CHAT_STORE.get');
-                return CHAT_STORE;
-            } else if (typeof CHAT_STORE.getKV === 'function') {
-                console.log('Using CHAT_STORE.getKV');
-                return {
-                    get: (key) => CHAT_STORE.getKV(key),
-                    put: (key, value) => CHAT_STORE.putKV(key, value)
-                };
-            } else if (typeof CHAT_STORE.read === 'function') {
-                console.log('Using CHAT_STORE.read');
-                return {
-                    get: (key) => CHAT_STORE.read(key),
-                    put: (key, value) => CHAT_STORE.write(key, value)
-                };
-            } else if (typeof CHAT_STORE.getItem === 'function') {
-                console.log('Using CHAT_STORE.getItem');
-                return {
-                    get: (key) => Promise.resolve(CHAT_STORE.getItem(key)),
-                    put: (key, value) => { CHAT_STORE.setItem(key, value); return Promise.resolve(); }
-                };
-            } else if (typeof CHAT_STORE.set === 'function') {
-                console.log('Using CHAT_STORE.set');
-                return {
-                    get: (key) => CHAT_STORE.get(key),
-                    put: (key, value) => CHAT_STORE.set(key, value)
-                };
-            }
-        } else if (typeof CHAT_STORE === 'string') {
-            console.log('CHAT_STORE is a string:', CHAT_STORE);
-            if (typeof aliyun !== 'undefined' && aliyun.kv) {
-                console.log('Using aliyun.kv with namespace:', CHAT_STORE);
-                return {
-                    get: (key) => aliyun.kv.get(CHAT_STORE, key),
-                    put: (key, value) => aliyun.kv.put(CHAT_STORE, key, value)
-                };
-            }
-        }
-    }
-    
-    if (typeof env !== 'undefined' && env.CHAT_STORE) {
-        console.log('Found env.CHAT_STORE');
-        const store = env.CHAT_STORE;
-        if (typeof store.get === 'function') {
-            console.log('Using env.CHAT_STORE.get');
-            return store;
-        }
-    }
-    
-    if (typeof AliyunFC !== 'undefined' && AliyunFC.KV) {
-        console.log('Using AliyunFC.KV');
-        return {
-            get: (key) => AliyunFC.KV.get('chat-store', key),
-            put: (key, value) => AliyunFC.KV.put('chat-store', key, value)
-        };
-    }
-    
-    console.log('KV store not available');
-    return null;
-}
+const STORE_URL = 'https://jsonblob.com/api/jsonBlob';
+const BLOB_ID = '1182148228949051392';
 
 async function getMessagesFromKV() {
     try {
-        const store = await getKVStore();
-        if (store) {
-            const data = await store.get(CHAT_KV_KEY);
-            return data ? JSON.parse(data) : [];
+        const response = await fetch(`${STORE_URL}/${BLOB_ID}`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.messages || [];
         }
     } catch (e) {
-        console.log('KV not available, using memory:', e.message);
+        console.log('External store error:', e.message);
     }
     return chatMessages;
 }
 
 async function saveMessagesToKV(messages) {
     try {
-        const store = await getKVStore();
-        if (store) {
-            await store.put(CHAT_KV_KEY, JSON.stringify(messages));
+        const response = await fetch(`${STORE_URL}/${BLOB_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: messages })
+        });
+        if (response.ok) {
             return true;
         }
     } catch (e) {
-        console.log('KV not available:', e.message);
+        console.log('External store error:', e.message);
     }
     chatMessages = messages;
     return false;
