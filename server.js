@@ -12,26 +12,41 @@ function getCurrentTime() {
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 }
 
+async function getKVStore() {
+    if (typeof CHAT_STORE !== 'undefined') {
+        if (typeof CHAT_STORE.get === 'function') {
+            return CHAT_STORE;
+        } else if (typeof env !== 'undefined' && env[CHAT_STORE]) {
+            return env[CHAT_STORE];
+        } else if (typeof self !== 'undefined' && self[CHAT_STORE]) {
+            return self[CHAT_STORE];
+        }
+    }
+    return null;
+}
+
 async function getMessagesFromKV() {
     try {
-        if (typeof CHAT_STORE !== 'undefined') {
-            const data = await CHAT_STORE.get(CHAT_KV_KEY);
+        const store = await getKVStore();
+        if (store) {
+            const data = await store.get(CHAT_KV_KEY);
             return data ? JSON.parse(data) : [];
         }
     } catch (e) {
-        console.log('KV not available, using memory');
+        console.log('KV not available, using memory:', e.message);
     }
     return chatMessages;
 }
 
 async function saveMessagesToKV(messages) {
     try {
-        if (typeof CHAT_STORE !== 'undefined') {
-            await CHAT_STORE.put(CHAT_KV_KEY, JSON.stringify(messages));
+        const store = await getKVStore();
+        if (store) {
+            await store.put(CHAT_KV_KEY, JSON.stringify(messages));
             return true;
         }
     } catch (e) {
-        console.log('KV not available');
+        console.log('KV not available:', e.message);
     }
     chatMessages = messages;
     return false;
