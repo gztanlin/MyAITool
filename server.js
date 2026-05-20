@@ -420,9 +420,8 @@ export default {
                 <button id="sendBtn">发送 💌</button>
             </div>
             <div class="share-buttons">
-                <button onclick="shareChat()" class="share-btn">📤 分享聊天</button>
-                <button onclick="document.getElementById('importFile').click()" class="share-btn">📥 导入聊天</button>
-                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importChat(event)" />
+                <button onclick="generateShareLink()" class="share-btn">🔗 生成分享链接</button>
+                <button onclick="copyShareLink()" class="share-btn">📋 复制链接</button>
                 <button onclick="clearChat()" class="share-btn">🗑️ 清空</button>
             </div>
         </div>
@@ -501,7 +500,9 @@ export default {
             if (e.key === 'Enter') sendMessage();
         });
         
-        function shareChat() {
+        let shareUrl = '';
+        
+        function generateShareLink() {
             const stored = localStorage.getItem('lqChatLocal');
             const messages = stored ? JSON.parse(stored) : [];
             if (messages.length === 0) {
@@ -509,57 +510,33 @@ export default {
                 return;
             }
             
-            const shareData = {
+            const data = {
                 messages: messages,
                 time: new Date().toISOString()
             };
             
-            const blob = new Blob([JSON.stringify(shareData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = '520-chat-' + new Date().toISOString().slice(0,10) + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
+            const encoded = btoa(JSON.stringify(data));
+            shareUrl = window.location.origin + '/lq?pass=lqq&name=' + encodeURIComponent(username) + '&share=' + encoded;
+            alert('分享链接已生成！点击"复制链接"按钮即可复制~');
         }
         
-        function importChat(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function copyShareLink() {
+            if (!shareUrl) {
+                generateShareLink();
+                if (!shareUrl) return;
+            }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.messages && Array.isArray(data.messages)) {
-                        const stored = localStorage.getItem('lqChatLocal');
-                        const existingMessages = stored ? JSON.parse(stored) : [];
-                        const existingIds = new Set(existingMessages.map(m => m.id));
-                        
-                        let newCount = 0;
-                        data.messages.forEach(msg => {
-                            if (!existingIds.has(msg.id)) {
-                                existingMessages.push(msg);
-                                newCount++;
-                            }
-                        });
-                        
-                        if (existingMessages.length > 100) {
-                            existingMessages.splice(0, existingMessages.length - 100);
-                        }
-                        
-                        localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
-                        loadMessages();
-                        alert('成功导入 ' + newCount + ' 条新消息！');
-                    } else {
-                        alert('文件格式不正确');
-                    }
-                } catch (err) {
-                    alert('导入失败：' + err.message);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('链接已复制到剪贴板！分享给你的爱人吧~');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = shareUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('链接已复制到剪贴板！');
+            });
         }
         
         function clearChat() {
@@ -569,6 +546,43 @@ export default {
             }
         }
         
+        function loadShareMessages() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareData = urlParams.get('share');
+            if (!shareData) return;
+            
+            try {
+                const decoded = atob(shareData);
+                const data = JSON.parse(decoded);
+                
+                if (data.messages && Array.isArray(data.messages)) {
+                    const stored = localStorage.getItem('lqChatLocal');
+                    const existingMessages = stored ? JSON.parse(stored) : [];
+                    const existingIds = new Set(existingMessages.map(m => m.id));
+                    
+                    let newCount = 0;
+                    data.messages.forEach(msg => {
+                        if (!existingIds.has(msg.id)) {
+                            existingMessages.push(msg);
+                            newCount++;
+                        }
+                    });
+                    
+                    if (existingMessages.length > 100) {
+                        existingMessages.splice(0, existingMessages.length - 100);
+                    }
+                    
+                    localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
+                    if (newCount > 0) {
+                        alert('成功接收 ' + newCount + ' 条新消息！');
+                    }
+                }
+            } catch (e) {
+                console.log('Failed to parse share data:', e);
+            }
+        }
+        
+        loadShareMessages();
         loadMessages();
     </script>
 </body>
