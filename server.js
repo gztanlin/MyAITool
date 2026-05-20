@@ -16,30 +16,48 @@ async function getKVStore() {
     console.log('Checking KV store availability...');
     
     if (typeof CHAT_STORE !== 'undefined') {
-        console.log('CHAT_STORE is defined:', typeof CHAT_STORE);
-        console.log('CHAT_STORE methods:', Object.keys(CHAT_STORE));
+        console.log('CHAT_STORE type:', typeof CHAT_STORE);
         
-        if (typeof CHAT_STORE.get === 'function') {
-            console.log('Using CHAT_STORE.get');
-            return CHAT_STORE;
-        } else if (typeof CHAT_STORE.getKV === 'function') {
-            console.log('Using CHAT_STORE.getKV');
-            return {
-                get: (key) => CHAT_STORE.getKV(key),
-                put: (key, value) => CHAT_STORE.putKV(key, value)
-            };
-        } else if (typeof CHAT_STORE.read === 'function') {
-            console.log('Using CHAT_STORE.read/write');
-            return {
-                get: (key) => CHAT_STORE.read(key),
-                put: (key, value) => CHAT_STORE.write(key, value)
-            };
-        } else if (typeof CHAT_STORE.getItem === 'function') {
-            console.log('Using CHAT_STORE.getItem/setItem');
-            return {
-                get: (key) => Promise.resolve(CHAT_STORE.getItem(key)),
-                put: (key, value) => Promise.resolve(CHAT_STORE.setItem(key, value))
-            };
+        if (typeof CHAT_STORE === 'object' && CHAT_STORE !== null) {
+            console.log('CHAT_STORE keys:', Object.keys(CHAT_STORE));
+            
+            if (typeof CHAT_STORE.get === 'function') {
+                console.log('Using CHAT_STORE.get');
+                return CHAT_STORE;
+            } else if (typeof CHAT_STORE.getKV === 'function') {
+                console.log('Using CHAT_STORE.getKV');
+                return {
+                    get: (key) => CHAT_STORE.getKV(key),
+                    put: (key, value) => CHAT_STORE.putKV(key, value)
+                };
+            } else if (typeof CHAT_STORE.read === 'function') {
+                console.log('Using CHAT_STORE.read');
+                return {
+                    get: (key) => CHAT_STORE.read(key),
+                    put: (key, value) => CHAT_STORE.write(key, value)
+                };
+            } else if (typeof CHAT_STORE.getItem === 'function') {
+                console.log('Using CHAT_STORE.getItem');
+                return {
+                    get: (key) => Promise.resolve(CHAT_STORE.getItem(key)),
+                    put: (key, value) => { CHAT_STORE.setItem(key, value); return Promise.resolve(); }
+                };
+            } else if (typeof CHAT_STORE.set === 'function') {
+                console.log('Using CHAT_STORE.set');
+                return {
+                    get: (key) => CHAT_STORE.get(key),
+                    put: (key, value) => CHAT_STORE.set(key, value)
+                };
+            }
+        } else if (typeof CHAT_STORE === 'string') {
+            console.log('CHAT_STORE is a string:', CHAT_STORE);
+            if (typeof aliyun !== 'undefined' && aliyun.kv) {
+                console.log('Using aliyun.kv with namespace:', CHAT_STORE);
+                return {
+                    get: (key) => aliyun.kv.get(CHAT_STORE, key),
+                    put: (key, value) => aliyun.kv.put(CHAT_STORE, key, value)
+                };
+            }
         }
     }
     
@@ -52,7 +70,15 @@ async function getKVStore() {
         }
     }
     
-    console.log('KV store not available, returning null');
+    if (typeof AliyunFC !== 'undefined' && AliyunFC.KV) {
+        console.log('Using AliyunFC.KV');
+        return {
+            get: (key) => AliyunFC.KV.get('chat-store', key),
+            put: (key, value) => AliyunFC.KV.put('chat-store', key, value)
+        };
+    }
+    
+    console.log('KV store not available');
     return null;
 }
 
