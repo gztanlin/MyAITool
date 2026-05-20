@@ -19,6 +19,266 @@ export default {
             );
         }
         
+        if (pathname === '/lq') {
+            const urlObj = new URL(url, 'http://localhost');
+            const password = urlObj.searchParams.get('pass');
+            const correctPassword = 'lqq';
+            
+            if (password !== correctPassword) {
+                return new Response(
+                    `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 请输入密码</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            font-family: Georgia, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 60px 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        .lock-icon { font-size: 4rem; margin-bottom: 20px; }
+        .title {
+            font-size: 2rem;
+            color: #ff6b9d;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .password-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #ffc8dd;
+            border-radius: 30px;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .password-input:focus {
+            border-color: #ff6b9d;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        }
+        .submit-btn {
+            margin-top: 30px;
+            padding: 15px 60px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.4);
+        }
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(255, 107, 157, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="lock-icon">🔐</div>
+        <h1 class="title">💕 请输入密码</h1>
+        <input type="password" class="password-input" id="password" placeholder="请输入密码" />
+        <button class="submit-btn" onclick="submitPassword()">解锁浪漫</button>
+    </div>
+    <script>
+        function submitPassword() {
+            const password = document.getElementById('password').value;
+            window.location.href = '/lq?pass=' + encodeURIComponent(password);
+        }
+        document.getElementById('password').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') submitPassword();
+        });
+    </script>
+</body>
+</html>`,
+                    { headers: { 'Content-Type': 'text/html' } }
+                );
+            }
+            
+            return new Response(
+                `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 致我最爱的人 - 520</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ffc8dd 25%, #ff9a9e 50%, #fecfef 75%, #ff6b9d 100%);
+            font-family: Georgia, serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .petal-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; overflow: hidden; z-index: 0;
+        }
+        .petal {
+            position: absolute; width: 60px; height: 80px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 50%, #ffc8dd 100%);
+            border-radius: 50% 0 50% 50%; opacity: 0.7;
+            animation: float 8s infinite ease-in-out;
+            box-shadow: 0 2px 10px rgba(255, 107, 157, 0.3);
+        }
+        .petal:nth-child(odd) {
+            background: linear-gradient(135deg, #ff8fab 0%, #ffa8b8 50%, #ffc8dd 100%);
+            border-radius: 0 50% 50% 50%;
+        }
+        .petal:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; transform: rotate(30deg); }
+        .petal:nth-child(2) { top: 20%; left: 80%; animation-delay: 1s; transform: rotate(60deg); }
+        .petal:nth-child(3) { top: 30%; left: 20%; animation-delay: 2s; transform: rotate(90deg); }
+        .petal:nth-child(4) { top: 40%; left: 60%; animation-delay: 3s; transform: rotate(120deg); }
+        .petal:nth-child(5) { top: 50%; left: 30%; animation-delay: 4s; transform: rotate(150deg); }
+        .petal:nth-child(6) { top: 60%; left: 70%; animation-delay: 5s; transform: rotate(180deg); }
+        .petal:nth-child(7) { top: 70%; left: 40%; animation-delay: 6s; transform: rotate(210deg); }
+        .petal:nth-child(8) { top: 80%; left: 50%; animation-delay: 7s; transform: rotate(240deg); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.7; }
+            25% { transform: translateY(-20px) rotate(20deg) scale(1.1); opacity: 0.8; }
+            50% { transform: translateY(-10px) rotate(-10deg) scale(0.9); opacity: 0.6; }
+            75% { transform: translateY(-30px) rotate(10deg) scale(1.05); opacity: 0.75; }
+        }
+        .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 60px 20px; position: relative; z-index: 1; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .title {
+            font-size: 3rem; color: #fff;
+            text-shadow: 3px 3px 10px rgba(0,0,0,0.5), 0 0 30px rgba(233,30,99,0.5);
+            margin-bottom: 15px; animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .subtitle { font-size: 1.5rem; color: #fff; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+        .rose-image {
+            margin: 20px auto; max-width: 400px; border-radius: 20px;
+            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 4px solid rgba(255,255,255,0.8);
+        }
+        .rose-image img { width: 100%; height: auto; display: block; }
+        .heart-line { width: 100px; height: 3px; background: linear-gradient(90deg, transparent, #fff, transparent); margin: 30px auto; }
+        .poem-card {
+            background: rgba(255,255,255,0.95); border-radius: 30px;
+            padding: 50px; margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .poem-title {
+            text-align: center; color: #ff6b9d; font-size: 1.8rem;
+            margin-bottom: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .poem-content { line-height: 2.2; color: #333; font-size: 1.1rem; }
+        .section { margin-bottom: 25px; }
+        .section p { margin: 8px 0; }
+        .final-line {
+            text-align: center; font-size: 1.3rem; color: #ff6b9d;
+            margin-top: 30px; font-weight: bold;
+        }
+        .name-card { text-align: center; margin-top: 40px; }
+        .name {
+            font-size: 2.5rem; color: #ff6b9d;
+            text-shadow: 2px 2px 8px rgba(255, 107, 157, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .footer { text-align: center; margin-top: 50px; color: rgba(255,255,255,0.9); }
+        .back-btn {
+            display: inline-block; margin-top: 30px;
+            padding: 12px 40px; background: rgba(255,255,255,0.9);
+            color: #ff6b9d; border-radius: 30px; text-decoration: none;
+            font-weight: bold; transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body>
+    <div class="petal-container">
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div>
+        <div class="petal"></div><div class="petal"></div><div class="petal"></div><div class="petal"></div>
+    </div>
+    <div class="particles" id="particles"></div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">💕 520 💕</h1>
+            <p class="subtitle">致我最爱的人LQQ</p>
+            <div class="rose-image">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=close%20up%20of%20beautiful%20red%20rose%20petals%20soft%20romantic%20lighting%20elegant%20background%20pink%20aesthetic&image_size=landscape_4_3" alt="玫瑰花瓣" />
+            </div>
+            <div class="heart-line"></div>
+        </div>
+        <div class="poem-card">
+            <h2 class="poem-title">时光的温柔</h2>
+            <div class="poem-content">
+                <div class="section">
+                    <p>一天很短，</p>
+                    <p>短得来不及拥抱清晨，就已经手握黄昏；</p>
+                </div>
+                <div class="section">
+                    <p>一年很短，</p>
+                    <p>短得来不及细品初春的殷红窦绿，就要打点素裹秋霜；</p>
+                </div>
+                <div class="section">
+                    <p>一生很短，</p>
+                    <p>短得来不及享用美好年华，就已经身处迟暮。</p>
+                </div>
+                <p class="final-line">而你，是我生命中最长的温柔。💝</p>
+            </div>
+        </div>
+        <div class="name-card">
+            <div class="name">LQQ</div>
+            <p style="color: #fff; margin-top: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">爱你一万年</p>
+        </div>
+        <div class="footer">
+            <a href="/" class="back-btn">🏠 返回首页</a>
+        </div>
+    </div>
+    <script>
+        const container = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
+            const heart = document.createElement('div');
+            heart.textContent = '❤️';
+            heart.style.cssText = `
+                position: absolute;
+                font-size: ${Math.random()*20+10}px;
+                left: ${Math.random()*100}%;
+                top: ${Math.random()*100}%;
+                opacity: ${Math.random()*0.5+0.3};
+                animation: floatHeart ${Math.random()*5+5}s infinite ease-in-out;
+                animation-delay: ${Math.random()*5}s;
+            `;
+            container.appendChild(heart);
+        }
+        const style = document.createElement('style');
+        style.textContent = `@keyframes floatHeart {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }`;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>`,
+                    { headers: { 'Content-Type': 'text/html' } }
+                );
+        }
+        
         if (pathname === '/feedback') {
             return new Response(
                 `<!DOCTYPE html>
@@ -1024,7 +1284,7 @@ export default {
     <div class="container">
         <div class="header">
             <h1>🤖 我的 AI 助手</h1>
-            <a href="/feedback" class="header-link">💬 留言交流</a>
+            <a href="/lq" class="header-link">💌 查收520专属浪漫</a>
         </div>
 
         <div class="mode-tabs">
@@ -2151,7 +2411,7 @@ export default {
     <div class="container">
         <div class="header">
             <h1>🤖 我的 AI 助手</h1>
-            <a href="/feedback" class="header-link">💬 留言交流</a>
+            <a href="/lq" class="header-link">💌 查收520专属浪漫</a>
         </div>
 
         <div class="mode-tabs">
