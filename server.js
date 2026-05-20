@@ -1604,7 +1604,7 @@ export default {
                     
                     let response;
                     try {
-                        response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                        response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1612,8 +1612,7 @@ export default {
                             },
                             body: JSON.stringify({
                                 model: 'qwen-turbo',
-                                input: { messages: messages },
-                                parameters: { result_format: 'message' }
+                                messages: messages
                             }),
                             signal: controller.signal
                         });
@@ -1628,54 +1627,35 @@ export default {
                     clearTimeout(timeoutId);
                     
                     const responseText = await response.text();
-                    const contentType = response.headers.get('content-type') || '';
-                    
-                    console.log('API Response Status:', response.status);
-                    console.log('API Content-Type:', contentType);
-                    console.log('Response starts with:', responseText.substring(0, 50));
                     
                     if (!response.ok) {
                         let errorMsg = `API 请求失败: ${response.status}`;
-                        if (responseText && responseText.length < 500) {
-                            if (responseText.trim().startsWith('<')) {
-                                const match = responseText.match(/<title[^>]*>([^<]+)<\/title>/i);
-                                if (match) {
-                                    errorMsg += ` - ${match[1].trim()}`;
-                                } else {
-                                    errorMsg += ` - HTML响应`;
-                                }
-                            } else {
-                                errorMsg += ` - ${responseText.substring(0, 200)}`;
-                            }
+                        try {
+                            const errorData = JSON.parse(responseText);
+                            errorMsg += ` - ${errorData.error?.message || errorData.message || responseText.substring(0, 200)}`;
+                        } catch (e) {
+                            errorMsg += ` - ${responseText.substring(0, 200)}`;
                         }
                         throw new Error(errorMsg);
-                    }
-                    
-                    if (responseText.trim().startsWith('<')) {
-                        throw new Error('API 返回了 HTML 内容，不是预期的 JSON 响应');
                     }
                     
                     let result;
                     try {
                         result = JSON.parse(responseText);
                     } catch (e) {
-                        throw new Error('无法解析 API 响应为 JSON: ' + responseText.substring(0, 100));
+                        throw new Error('无法解析 API 响应');
                     }
                     
-                    if (result.output && result.output.choices && result.output.choices[0]) {
-                        const aiContent = result.output.choices[0].message.content;
-                        
-                        return new Response(
-                            JSON.stringify({ 
-                                title: pathname === '/api/conversation' ? 'AI 对话' : (requestData.mode === 'chat' ? 'AI 回答' : 'AI 分析结果'), 
-                                summary: aiContent,
-                                provider: '通义千问'
-                            }),
-                            { headers: { 'Content-Type': 'application/json' } }
-                        );
-                    } else {
-                        throw new Error('AI API 返回格式错误: ' + JSON.stringify(result).substring(0, 200));
-                    }
+                    const aiContent = result.choices?.[0]?.message?.content || '';
+                    
+                    return new Response(
+                        JSON.stringify({ 
+                            title: pathname === '/api/conversation' ? 'AI 对话' : (requestData.mode === 'chat' ? 'AI 回答' : 'AI 分析结果'), 
+                            summary: aiContent,
+                            provider: '通义千问'
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
                 } catch (error) {
                     console.error('AI API Error:', error);
                     return new Response(
