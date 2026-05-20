@@ -452,14 +452,8 @@ export default {
                 document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
                 
                 let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-                data.messages.forEach(msg => {
-                    html += `
-                        <div class="message">
-                            <div class="message-user">${msg.user}</div>
-                            <div class="message-content">${msg.content}</div>
-                            <div class="message-time">${msg.time}</div>
-                        </div>
-                    `;
+                data.messages.forEach(function(msg) {
+                    html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
                 });
                 messagesContainer.innerHTML = html;
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
