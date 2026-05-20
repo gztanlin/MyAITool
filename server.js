@@ -510,6 +510,22 @@ export default {
             const content = input.value.trim();
             if (!content) return;
             
+            const tempMsg = {
+                id: Date.now().toString(),
+                user: username,
+                content: content,
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                timestamp: Date.now()
+            };
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageClass = 'message me';
+            const html = '<div class="' + messageClass + '"><div class="message-user">' + tempMsg.user + '</div><div class="message-content">' + tempMsg.content + '</div><div class="message-time">' + tempMsg.time + '</div></div>';
+            messagesContainer.innerHTML += html;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            input.value = '';
+            
             try {
                 const response = await fetch('/api/chat/messages', {
                     method: 'POST',
@@ -519,7 +535,6 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    input.value = '';
                     await fetchMessages();
                 }
             } catch (e) {
