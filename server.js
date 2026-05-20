@@ -465,25 +465,54 @@ export default {
             });
             const data = await response.json();
             if (data.success) {
+                saveMessageToLocal(data.message);
                 input.value = '';
                 loadMessages();
             }
         }
         
+        function saveMessageToLocal(msg) {
+            const stored = localStorage.getItem('lqChatLocal');
+            const messages = stored ? JSON.parse(stored) : [];
+            messages.push(msg);
+            if (messages.length > 100) messages.shift();
+            localStorage.setItem('lqChatLocal', JSON.stringify(messages));
+        }
+        
         async function loadMessages() {
-            const response = await fetch('/api/chat/messages');
-            const data = await response.json();
-            if (data.success) {
-                const messagesContainer = document.getElementById('chatMessages');
-                document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
-                
-                let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-                data.messages.forEach(function(msg) {
-                    html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
-                });
-                messagesContainer.innerHTML = html;
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            let serverMessages = [];
+            try {
+                const response = await fetch('/api/chat/messages');
+                const data = await response.json();
+                if (data.success) {
+                    serverMessages = data.messages;
+                    document.getElementById('onlineCount').textContent = '在线: ' + data.onlineCount;
+                }
+            } catch (e) {
+                console.log('Server unavailable');
             }
+            
+            const stored = localStorage.getItem('lqChatLocal');
+            const localMessages = stored ? JSON.parse(stored) : [];
+            
+            const allMessages = [...serverMessages];
+            const serverIds = new Set(serverMessages.map(m => m.id));
+            
+            localMessages.forEach(msg => {
+                if (!serverIds.has(msg.id)) {
+                    allMessages.push(msg);
+                }
+            });
+            
+            allMessages.sort((a, b) => a.timestamp - b.timestamp);
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
+            allMessages.forEach(function(msg) {
+                html += '<div class="message"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
+            });
+            messagesContainer.innerHTML = html;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
