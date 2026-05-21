@@ -11,6 +11,8 @@ function getCurrentTime() {
 }
 
 const CHAT_STORE_KEY = 'lq_chat_messages';
+const ONLINE_STORE_KEY = 'lq_chat_online';
+const HEARTBEAT_TIMEOUT = 45000;
 
 export default {
     async fetch(req) {
@@ -29,6 +31,81 @@ export default {
                 JSON.stringify({ status: 'ok', message: 'Server running' }),
                 { headers: { 'Content-Type': 'application/json' } }
             );
+        }
+        
+        if (pathname === '/api/chat/online') {
+            if (method === 'POST') {
+                try {
+                    const body = await req.json();
+                    const userId = body.userId;
+                    const username = body.username;
+                    
+                    if (!userId || !username) {
+                        return new Response(
+                            JSON.stringify({ success: false, error: 'Missing userId or username' }),
+                            { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                        );
+                    }
+                    
+                    let onlineUsers = {};
+                    try {
+                        const stored = await ONLINE_STORE.get(ONLINE_STORE_KEY);
+                        if (stored) {
+                            onlineUsers = JSON.parse(stored);
+                        }
+                    } catch (e) {}
+                    
+                    const now = Date.now();
+                    for (const id in onlineUsers) {
+                        if (now - onlineUsers[id].lastHeartbeat > HEARTBEAT_TIMEOUT) {
+                            delete onlineUsers[id];
+                        }
+                    }
+                    
+                    onlineUsers[userId] = {
+                        username: username,
+                        lastHeartbeat: now
+                    };
+                    
+                    try {
+                        await ONLINE_STORE.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
+                    } catch (e) {}
+                    
+                    return new Response(
+                        JSON.stringify({ success: true, onlineCount: Object.keys(onlineUsers).length }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                } catch (e) {
+                    return new Response(
+                        JSON.stringify({ success: false, error: 'Invalid request' }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
+                }
+            } else if (method === 'GET') {
+                let onlineUsers = {};
+                try {
+                    const stored = await ONLINE_STORE.get(ONLINE_STORE_KEY);
+                    if (stored) {
+                        onlineUsers = JSON.parse(stored);
+                    }
+                } catch (e) {}
+                
+                const now = Date.now();
+                for (const id in onlineUsers) {
+                    if (now - onlineUsers[id].lastHeartbeat > HEARTBEAT_TIMEOUT) {
+                        delete onlineUsers[id];
+                    }
+                }
+                
+                try {
+                    await ONLINE_STORE.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
+                } catch (e) {}
+                
+                return new Response(
+                    JSON.stringify({ success: true, onlineCount: Object.keys(onlineUsers).length }),
+                    { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                );
+            }
         }
         
         if (pathname === '/api/chat/messages') {
@@ -451,6 +528,12 @@ export default {
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('name') || '💕 访客';
         
+        let userId = localStorage.getItem('lqUserId');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('lqUserId', userId);
+        }
+        
         const container = document.getElementById('particles');
         for(let i=0; i<30; i++) {
             const heart = document.createElement('div');
@@ -467,6 +550,34 @@ export default {
         const style = document.createElement('style');
         style.textContent = '@keyframes floatHeart { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }';
         document.head.appendChild(style);
+        
+        async function sendHeartbeat() {
+            try {
+                const response = await fetch('/api/chat/online', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId, username: username })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('onlineCount').textContent = '💕 ' + data.onlineCount + ' 人在线';
+                }
+            } catch (e) {
+                console.log('Heartbeat failed:', e);
+            }
+        }
+        
+        async function fetchOnlineCount() {
+            try {
+                const response = await fetch('/api/chat/online');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('onlineCount').textContent = '💕 ' + data.onlineCount + ' 人在线';
+                }
+            } catch (e) {
+                console.log('Fetch online count failed:', e);
+            }
+        }
         
         async function fetchMessages() {
             try {
@@ -489,7 +600,6 @@ export default {
                     
                     localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
                     loadMessages();
-                    document.getElementById('onlineCount').textContent = '💕 共 ' + existingMessages.length + ' 条消息';
                 }
             } catch (e) {
                 console.log('Fetch messages failed:', e);
@@ -564,7 +674,9 @@ export default {
             }
         }
         
+        sendHeartbeat();
         fetchMessages();
+        setInterval(sendHeartbeat, 30000);
         setInterval(fetchMessages, 3000);
     </script>
 </body>
