@@ -16,33 +16,35 @@ const FEEDBACK_STORE_KEY = 'feedback_messages';
 const HEARTBEAT_TIMEOUT = 45000;
 
 class KVStorage {
-    constructor(store) {
-        this.store = store;
+    constructor(namespace) {
+        this.namespace = namespace;
         this.memoryFallback = {};
     }
     
     async get(key) {
         try {
-            if (this.store) {
-                const value = await this.store.get(key);
+            if (this.namespace && typeof EdgeKV !== 'undefined') {
+                const edgeKv = new EdgeKV({ namespace: this.namespace });
+                const value = await edgeKv.get(key);
                 if (value) {
                     this.memoryFallback[key] = value;
                     return value;
                 }
             }
         } catch (e) {
-            console.log('KV get error:', e);
+            console.log('EdgeKV get error:', e);
         }
         return this.memoryFallback[key] || null;
     }
     
     async put(key, value) {
         this.memoryFallback[key] = value;
-        if (this.store) {
+        if (this.namespace && typeof EdgeKV !== 'undefined') {
             try {
-                await this.store.put(key, value);
+                const edgeKv = new EdgeKV({ namespace: this.namespace });
+                await edgeKv.put(key, value);
             } catch (e) {
-                console.log('KV put error:', e);
+                console.log('EdgeKV put error:', e);
             }
         }
     }
@@ -52,9 +54,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = env && env.CHAT_STORE ? new KVStorage(env.CHAT_STORE) : new KVStorage(null);
-        const onlineStore = env && env.ONLINE_STORE ? new KVStorage(env.ONLINE_STORE) : new KVStorage(null);
-        const feedbackStore = env && env.CHAT_STORE ? new KVStorage(env.CHAT_STORE) : new KVStorage(null);
+        const chatStore = new KVStorage('chat-store');
+        const onlineStore = new KVStorage('chat-store');
+        const feedbackStore = new KVStorage('chat-store');
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
