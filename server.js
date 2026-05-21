@@ -1177,47 +1177,51 @@ export default {
 
         function renderMessages(messages) {
             if (messages.length === 0) {
-                messagesList.innerHTML = \`
+                messagesList.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">💬</div>
                         <p>暂无留言，快来发表第一条留言吧！</p>
                     </div>
-                \`;
+                `;
                 return;
             }
 
             messages.sort((a, b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
 
-            messagesList.innerHTML = messages.map(msg => `
-                <div class="message-card">
-                    <div class="message-header">
-                        <span class="message-name">👤 \${escapeHtml(msg.name || '匿名用户')}</span>
-                        <span class="message-time">\${msg.time}</span>
-                    </div>
-                    <div class="message-content">\${escapeHtml(msg.content)}</div>
-                    \${msg.replies && msg.replies.length > 0 ? \`
-                        <div class="message-replies">
-                            \${msg.replies.map(reply => \`
-                                <div class="reply-card">
-                                    <div class="reply-header">
-                                        <span class="reply-admin">👤 管理员回复</span>
-                                        <span class="reply-time">\${reply.time}</span>
-                                    </div>
-                                    <div class="reply-content">\${escapeHtml(reply.content)}</div>
+            messagesList.innerHTML = messages.map(msg => {
+                const repliesHtml = msg.replies && msg.replies.length > 0 
+                    ? `<div class="message-replies">
+                        ${msg.replies.map(reply => `
+                            <div class="reply-card">
+                                <div class="reply-header">
+                                    <span class="reply-admin">👤 管理员回复</span>
+                                    <span class="reply-time">${reply.time}</span>
                                 </div>
-                            \`).join('')}
+                                <div class="reply-content">${escapeHtml(reply.content)}</div>
+                            </div>
+                        `).join('')}
+                       </div>` 
+                    : '';
+                
+                return `
+                    <div class="message-card">
+                        <div class="message-header">
+                            <span class="message-name">👤 ${escapeHtml(msg.name || '匿名用户')}</span>
+                            <span class="message-time">${msg.time}</span>
                         </div>
-                    \` : ''}
-                    <div class="reply-form" data-id="\${msg.id}">
-                        <textarea placeholder="输入回复内容..."></textarea>
-                        <button type="button" onclick="submitReply(\${msg.id})">回复</button>
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                        ${repliesHtml}
+                        <div class="reply-form" data-id="${msg.id}">
+                            <textarea placeholder="输入回复内容..."></textarea>
+                            <button type="button" onclick="submitReply(${msg.id})">回复</button>
+                        </div>
                     </div>
-                </div>
-            \`).join('');
+                `;
+            }).join('');
         }
 
         async function submitReply(messageId) {
-            const replyForm = document.querySelector(\`.reply-form[data-id="\${messageId}"]\`);
+            const replyForm = document.querySelector(`.reply-form[data-id="${messageId}"]`);
             const textarea = replyForm.querySelector('textarea');
             const button = replyForm.querySelector('button');
             const content = textarea.value.trim();
