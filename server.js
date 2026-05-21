@@ -12,6 +12,7 @@ function getCurrentTime() {
 
 const CHAT_STORE_KEY = 'lq_chat_messages';
 const ONLINE_STORE_KEY = 'lq_chat_online';
+const FEEDBACK_STORE_KEY = 'feedback_messages';
 const HEARTBEAT_TIMEOUT = 45000;
 
 class KVStorage {
@@ -53,6 +54,17 @@ export default {
         
         const chatStore = env && env.CHAT_STORE ? new KVStorage(env.CHAT_STORE) : new KVStorage(null);
         const onlineStore = env && env.ONLINE_STORE ? new KVStorage(env.ONLINE_STORE) : new KVStorage(null);
+        const feedbackStore = env && env.CHAT_STORE ? new KVStorage(env.CHAT_STORE) : new KVStorage(null);
+        
+        // Load feedback messages from KV
+        if (feedbackMessages.length === 0) {
+            const stored = await feedbackStore.get(FEEDBACK_STORE_KEY);
+            if (stored) {
+                try {
+                    feedbackMessages = JSON.parse(stored);
+                } catch (e) {}
+            }
+        }
         
         let pathname;
         try {
@@ -2188,6 +2200,9 @@ export default {
                     };
                     
                     feedbackMessages.unshift(feedbackEntry);
+                    
+                    // Save to KV storage
+                    await feedbackStore.put(FEEDBACK_STORE_KEY, JSON.stringify(feedbackMessages));
 
                     console.log('=== 收到新留言 ===');
                     console.log(`ID: ${feedbackEntry.id}`);
@@ -2227,6 +2242,9 @@ export default {
                         time: timestamp,
                         content: content
                     });
+                    
+                    // Save to KV storage
+                    await feedbackStore.put(FEEDBACK_STORE_KEY, JSON.stringify(feedbackMessages));
 
                     console.log('=== 收到回复 ===');
                     console.log(`留言ID: ${id}`);
