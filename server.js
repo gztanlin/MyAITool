@@ -1177,12 +1177,10 @@ export default {
 
         function renderMessages(messages) {
             if (messages.length === 0) {
-                messagesList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">💬</div>
-                        <p>暂无留言，快来发表第一条留言吧！</p>
-                    </div>
-                `;
+                messagesList.innerHTML = '<div class="empty-state">' +
+                    '<div class="icon">💬</div>' +
+                    '<p>暂无留言，快来发表第一条留言吧！</p>' +
+                    '</div>';
                 return;
             }
 
@@ -1221,7 +1219,7 @@ export default {
         }
 
         async function submitReply(messageId) {
-            const replyForm = document.querySelector(`.reply-form[data-id="${messageId}"]`);
+            const replyForm = document.querySelector('.reply-form[data-id="' + messageId + '"]');
             const textarea = replyForm.querySelector('textarea');
             const button = replyForm.querySelector('button');
             const content = textarea.value.trim();
