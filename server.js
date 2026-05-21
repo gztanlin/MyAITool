@@ -54,9 +54,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('chat-store');
-        const onlineStore = new KVStorage('chat-store');
-        const feedbackStore = new KVStorage('chat-store');
+        const chatStore = new KVStorage('feedback-kv');      // 浪漫聊天室使用 feedback-kv
+        const onlineStore = new KVStorage('feedback-kv');    // 在线状态也使用 feedback-kv
+        const feedbackStore = new KVStorage('chat-store');   // 留言板使用 chat-store
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
