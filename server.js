@@ -583,22 +583,27 @@ export default {
             try {
                 const response = await fetch('/api/chat/messages');
                 const data = await response.json();
-                if (data.success && data.messages && data.messages.length > 0) {
-                    const stored = localStorage.getItem('lqChatLocal');
-                    const existingMessages = stored ? JSON.parse(stored) : [];
-                    const existingIds = new Set(existingMessages.map(m => m.id));
+                if (data.success && data.messages) {
+                    const messages = data.messages;
                     
-                    data.messages.forEach(msg => {
-                        if (!existingIds.has(msg.id)) {
-                            existingMessages.push(msg);
+                    if (messages.length > 0) {
+                        const stored = localStorage.getItem('lqChatLocal');
+                        const existingMessages = stored ? JSON.parse(stored) : [];
+                        const existingIds = new Set(existingMessages.map(m => m.id));
+                        
+                        messages.forEach(msg => {
+                            if (!existingIds.has(msg.id)) {
+                                existingMessages.push(msg);
+                            }
+                        });
+                        
+                        if (existingMessages.length > 100) {
+                            existingMessages.splice(0, existingMessages.length - 100);
                         }
-                    });
-                    
-                    if (existingMessages.length > 100) {
-                        existingMessages.splice(0, existingMessages.length - 100);
+                        
+                        localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
                     }
                     
-                    localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
                     loadMessages();
                 }
             } catch (e) {
@@ -608,7 +613,10 @@ export default {
         
         function loadMessages() {
             const stored = localStorage.getItem('lqChatLocal');
-            const messages = stored ? JSON.parse(stored) : [];
+            let messages = stored ? JSON.parse(stored) : [];
+            
+            messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            localStorage.setItem('lqChatLocal', JSON.stringify(messages));
             
             const messagesContainer = document.getElementById('chatMessages');
             
@@ -674,6 +682,7 @@ export default {
             }
         }
         
+        loadMessages();
         sendHeartbeat();
         fetchMessages();
         setInterval(sendHeartbeat, 30000);
