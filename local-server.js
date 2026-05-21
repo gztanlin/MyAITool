@@ -1554,7 +1554,7 @@ app.get('/api/feedback', (req, res) => {
 });
 
 app.post('/api/feedback', (req, res) => {
-    const { content } = req.body;
+    const { name, content } = req.body;
 
     if (!content) {
         return res.status(400).json({ error: '请输入留言内容' });
@@ -1563,6 +1563,8 @@ app.post('/api/feedback', (req, res) => {
     const feedbackEntry = {
         id: Date.now(),
         time: new Date().toLocaleString('zh-CN'),
+        timestamp: Date.now(),
+        name: name || '匿名用户',
         content: content,
         replies: []
     };

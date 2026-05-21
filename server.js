@@ -945,6 +945,12 @@ export default {
             font-size: 0.875rem;
         }
 
+        .message-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9375rem;
+        }
+
         .message-content {
             color: #374151;
             line-height: 1.6;
@@ -1053,7 +1059,17 @@ export default {
             <p>欢迎留言，我会尽快回复您！</p>
         </div>
 
+        <div class="messages-section">
+            <h2>📋 留言记录</h2>
+            <div id="messagesList"></div>
+        </div>
+
         <form id="feedbackForm">
+            <div class="form-group">
+                <label>👤 您的称呼 <span class="optional">(选填)</span></label>
+                <input type="text" id="feedbackName" placeholder="请输入您的称呼...">
+            </div>
+
             <div class="form-group">
                 <label>📝 您的留言</label>
                 <textarea id="feedbackContent" placeholder="请输入您的留言、建议或问题..."></textarea>
@@ -1081,15 +1097,11 @@ export default {
         </div>
 
         <a href="/" class="back-link">← 返回首页</a>
-
-        <div class="messages-section">
-            <h2>📋 留言记录</h2>
-            <div id="messagesList"></div>
-        </div>
     </div>
 
     <script>
         const feedbackForm = document.getElementById('feedbackForm');
+        const feedbackName = document.getElementById('feedbackName');
         const feedbackContent = document.getElementById('feedbackContent');
         const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
         const feedbackLoading = document.getElementById('feedbackLoading');
@@ -1109,6 +1121,7 @@ export default {
         async function submitFeedback(e) {
             e.preventDefault();
             
+            const name = feedbackName.value.trim() || '匿名用户';
             const content = feedbackContent.value.trim();
 
             if (!content) {
@@ -1125,7 +1138,7 @@ export default {
                 const response = await fetch('/api/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: content })
+                    body: JSON.stringify({ name: name, content: content })
                 });
 
                 const data = await response.json();
@@ -1135,6 +1148,7 @@ export default {
                 }
 
                 feedbackSuccessMessage.classList.add('show');
+                feedbackName.value = '';
                 feedbackContent.value = '';
                 loadMessages();
 
@@ -1172,9 +1186,12 @@ export default {
                 return;
             }
 
-            messagesList.innerHTML = messages.map(msg => \`
+            messages.sort((a, b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
+
+            messagesList.innerHTML = messages.map(msg => `
                 <div class="message-card">
                     <div class="message-header">
+                        <span class="message-name">👤 \${escapeHtml(msg.name || '匿名用户')}</span>
                         <span class="message-time">\${msg.time}</span>
                     </div>
                     <div class="message-content">\${escapeHtml(msg.content)}</div>
@@ -2150,7 +2167,7 @@ export default {
                 }
 
                 if (pathname === '/api/feedback') {
-                    const { content } = requestData;
+                    const { name, content } = requestData;
                     if (!content) {
                         return new Response(
                             JSON.stringify({ error: '请输入留言内容' }),
@@ -2158,10 +2175,12 @@ export default {
                         );
                     }
 
-                    const timestamp = new Date().toLocaleString('zh-CN');
+                    const timestamp = Date.now();
                     const feedbackEntry = {
                         id: Date.now(),
-                        time: timestamp,
+                        time: new Date().toLocaleString('zh-CN'),
+                        timestamp: timestamp,
+                        name: name || '匿名用户',
                         content: content,
                         replies: []
                     };
@@ -2171,6 +2190,7 @@ export default {
                     console.log('=== 收到新留言 ===');
                     console.log(`ID: ${feedbackEntry.id}`);
                     console.log(`时间: ${feedbackEntry.time}`);
+                    console.log(`称呼: ${feedbackEntry.name}`);
                     console.log(`内容: ${feedbackEntry.content}`);
                     console.log('====================');
 
