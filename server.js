@@ -15,8 +15,11 @@ const ONLINE_STORE_KEY = 'lq_chat_online';
 const HEARTBEAT_TIMEOUT = 45000;
 
 export default {
-    async fetch(req) {
+    async fetch(req, env) {
         const { url, method } = req;
+        
+        const CHAT_STORE = env.CHAT_STORE;
+        const ONLINE_STORE = env.ONLINE_STORE;
         
         let pathname;
         try {
