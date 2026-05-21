@@ -1189,34 +1189,34 @@ export default {
             messages.sort((a, b) => new Date(b.timestamp || b.time) - new Date(a.timestamp || a.time));
 
             messagesList.innerHTML = messages.map(msg => {
-                const repliesHtml = msg.replies && msg.replies.length > 0 
-                    ? `<div class="message-replies">
-                        ${msg.replies.map(reply => `
-                            <div class="reply-card">
-                                <div class="reply-header">
-                                    <span class="reply-admin">👤 管理员回复</span>
-                                    <span class="reply-time">${reply.time}</span>
-                                </div>
-                                <div class="reply-content">${escapeHtml(reply.content)}</div>
-                            </div>
-                        `).join('')}
-                       </div>` 
-                    : '';
+                let repliesHtml = '';
+                if (msg.replies && msg.replies.length > 0) {
+                    repliesHtml = '<div class="message-replies">';
+                    for (const reply of msg.replies) {
+                        repliesHtml += '<div class="reply-card">' +
+                            '<div class="reply-header">' +
+                            '<span class="reply-admin">👤 管理员回复</span>' +
+                            '<span class="reply-time">' + reply.time + '</span>' +
+                            '</div>' +
+                            '<div class="reply-content">' + escapeHtml(reply.content) + '</div>' +
+                            '</div>';
+                    }
+                    repliesHtml += '</div>';
+                }
                 
-                return `
-                    <div class="message-card">
-                        <div class="message-header">
-                            <span class="message-name">👤 ${escapeHtml(msg.name || '匿名用户')}</span>
-                            <span class="message-time">${msg.time}</span>
-                        </div>
-                        <div class="message-content">${escapeHtml(msg.content)}</div>
-                        ${repliesHtml}
-                        <div class="reply-form" data-id="${msg.id}">
-                            <textarea placeholder="输入回复内容..."></textarea>
-                            <button type="button" onclick="submitReply(${msg.id})">回复</button>
-                        </div>
-                    </div>
-                `;
+                const name = escapeHtml(msg.name || '匿名用户');
+                return '<div class="message-card">' +
+                    '<div class="message-header">' +
+                    '<span class="message-name">👤 ' + name + '</span>' +
+                    '<span class="message-time">' + msg.time + '</span>' +
+                    '</div>' +
+                    '<div class="message-content">' + escapeHtml(msg.content) + '</div>' +
+                    repliesHtml +
+                    '<div class="reply-form" data-id="' + msg.id + '">' +
+                    '<textarea placeholder="输入回复内容..."></textarea>' +
+                    '<button type="button" onclick="submitReply(' + msg.id + ')">回复</button>' +
+                    '</div>' +
+                    '</div>';
             }).join('');
         }
 
