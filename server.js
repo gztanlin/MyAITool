@@ -1,6 +1,5 @@
 let feedbackMessages = [];
 let chatMessages = [];
-let onlineUsersCache = {};
 
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
@@ -15,29 +14,29 @@ const CHAT_STORE_KEY = 'lq_chat_messages';
 const ONLINE_STORE_KEY = 'lq_chat_online';
 const HEARTBEAT_TIMEOUT = 45000;
 
-class StorageWrapper {
+class KVStorage {
     constructor(store) {
         this.store = store;
-        this.cache = {};
+        this.memoryFallback = {};
     }
     
     async get(key) {
-        if (this.store) {
-            try {
+        try {
+            if (this.store) {
                 const value = await this.store.get(key);
                 if (value) {
-                    this.cache[key] = value;
+                    this.memoryFallback[key] = value;
                     return value;
                 }
-            } catch (e) {
-                console.log('KV get error:', e);
             }
+        } catch (e) {
+            console.log('KV get error:', e);
         }
-        return this.cache[key] || null;
+        return this.memoryFallback[key] || null;
     }
     
     async put(key, value) {
-        this.cache[key] = value;
+        this.memoryFallback[key] = value;
         if (this.store) {
             try {
                 await this.store.put(key, value);
@@ -52,8 +51,8 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = env && env.CHAT_STORE ? new StorageWrapper(env.CHAT_STORE) : new StorageWrapper(null);
-        const onlineStore = env && env.ONLINE_STORE ? new StorageWrapper(env.ONLINE_STORE) : new StorageWrapper(null);
+        const chatStore = env && env.CHAT_STORE ? new KVStorage(env.CHAT_STORE) : new KVStorage(null);
+        const onlineStore = env && env.ONLINE_STORE ? new KVStorage(env.ONLINE_STORE) : new KVStorage(null);
         
         let pathname;
         try {
