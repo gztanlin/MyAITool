@@ -472,10 +472,24 @@ export default {
             try {
                 const response = await fetch('/api/chat/messages');
                 const data = await response.json();
-                if (data.success && data.messages) {
-                    localStorage.setItem('lqChatLocal', JSON.stringify(data.messages));
+                if (data.success && data.messages && data.messages.length > 0) {
+                    const stored = localStorage.getItem('lqChatLocal');
+                    const existingMessages = stored ? JSON.parse(stored) : [];
+                    const existingIds = new Set(existingMessages.map(m => m.id));
+                    
+                    data.messages.forEach(msg => {
+                        if (!existingIds.has(msg.id)) {
+                            existingMessages.push(msg);
+                        }
+                    });
+                    
+                    if (existingMessages.length > 100) {
+                        existingMessages.splice(0, existingMessages.length - 100);
+                    }
+                    
+                    localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
                     loadMessages();
-                    document.getElementById('onlineCount').textContent = '💕 共 ' + data.messages.length + ' 条消息';
+                    document.getElementById('onlineCount').textContent = '💕 共 ' + existingMessages.length + ' 条消息';
                 }
             } catch (e) {
                 console.log('Fetch messages failed:', e);
