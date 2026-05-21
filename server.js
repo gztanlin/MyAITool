@@ -1,5 +1,6 @@
 let feedbackMessages = [];
 let chatMessages = [];
+let onlineUsersCache = {};
 
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
@@ -14,12 +15,45 @@ const CHAT_STORE_KEY = 'lq_chat_messages';
 const ONLINE_STORE_KEY = 'lq_chat_online';
 const HEARTBEAT_TIMEOUT = 45000;
 
+class StorageWrapper {
+    constructor(store) {
+        this.store = store;
+        this.cache = {};
+    }
+    
+    async get(key) {
+        if (this.store) {
+            try {
+                const value = await this.store.get(key);
+                if (value) {
+                    this.cache[key] = value;
+                    return value;
+                }
+            } catch (e) {
+                console.log('KV get error:', e);
+            }
+        }
+        return this.cache[key] || null;
+    }
+    
+    async put(key, value) {
+        this.cache[key] = value;
+        if (this.store) {
+            try {
+                await this.store.put(key, value);
+            } catch (e) {
+                console.log('KV put error:', e);
+            }
+        }
+    }
+}
+
 export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const CHAT_STORE = env.CHAT_STORE;
-        const ONLINE_STORE = env.ONLINE_STORE;
+        const chatStore = env && env.CHAT_STORE ? new StorageWrapper(env.CHAT_STORE) : new StorageWrapper(null);
+        const onlineStore = env && env.ONLINE_STORE ? new StorageWrapper(env.ONLINE_STORE) : new StorageWrapper(null);
         
         let pathname;
         try {
@@ -52,7 +86,7 @@ export default {
                     
                     let onlineUsers = {};
                     try {
-                        const stored = await ONLINE_STORE.get(ONLINE_STORE_KEY);
+                        const stored = await onlineStore.get(ONLINE_STORE_KEY);
                         if (stored) {
                             onlineUsers = JSON.parse(stored);
                         }
@@ -70,9 +104,7 @@ export default {
                         lastHeartbeat: now
                     };
                     
-                    try {
-                        await ONLINE_STORE.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
-                    } catch (e) {}
+                    await onlineStore.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
                     
                     return new Response(
                         JSON.stringify({ success: true, onlineCount: Object.keys(onlineUsers).length }),
@@ -87,7 +119,7 @@ export default {
             } else if (method === 'GET') {
                 let onlineUsers = {};
                 try {
-                    const stored = await ONLINE_STORE.get(ONLINE_STORE_KEY);
+                    const stored = await onlineStore.get(ONLINE_STORE_KEY);
                     if (stored) {
                         onlineUsers = JSON.parse(stored);
                     }
@@ -100,9 +132,7 @@ export default {
                     }
                 }
                 
-                try {
-                    await ONLINE_STORE.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
-                } catch (e) {}
+                await onlineStore.put(ONLINE_STORE_KEY, JSON.stringify(onlineUsers));
                 
                 return new Response(
                     JSON.stringify({ success: true, onlineCount: Object.keys(onlineUsers).length }),
@@ -128,13 +158,7 @@ export default {
                         chatMessages = chatMessages.slice(-100);
                     }
                     
-                    try {
-                        if (typeof CHAT_STORE !== 'undefined') {
-                            await CHAT_STORE.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
-                        }
-                    } catch (e) {
-                        console.log('KV put failed:', e);
-                    }
+                    await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
                     
                     return new Response(
                         JSON.stringify({ success: true, message: newMessage, total: chatMessages.length }),
@@ -148,10 +172,11 @@ export default {
                 }
             } else if (method === 'GET') {
                 try {
-                    if (typeof CHAT_STORE !== 'undefined') {
-                        const stored = await CHAT_STORE.get(CHAT_STORE_KEY);
-                        if (stored) {
-                            chatMessages = JSON.parse(stored);
+                    const stored = await chatStore.get(CHAT_STORE_KEY);
+                    if (stored) {
+                        const storedMessages = JSON.parse(stored);
+                        if (storedMessages.length > chatMessages.length) {
+                            chatMessages = storedMessages;
                         }
                     }
                 } catch (e) {
