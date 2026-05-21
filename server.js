@@ -185,10 +185,7 @@ export default {
                 try {
                     const stored = await chatStore.get(CHAT_STORE_KEY);
                     if (stored) {
-                        const storedMessages = JSON.parse(stored);
-                        if (storedMessages.length > chatMessages.length) {
-                            chatMessages = storedMessages;
-                        }
+                        chatMessages = JSON.parse(stored);
                     }
                 } catch (e) {
                     console.log('KV get failed:', e);
