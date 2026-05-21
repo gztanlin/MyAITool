@@ -54,9 +54,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('feedback-kv');      // 浪漫聊天室使用 feedback-kv
-        const onlineStore = new KVStorage('feedback-kv');    // 在线状态也使用 feedback-kv
-        const feedbackStore = new KVStorage('chat-store');   // 留言板使用 chat-store
+        const chatStore = new KVStorage('chat-store');      // 浪漫聊天室使用 chat-store
+        const onlineStore = new KVStorage('chat-store');    // 在线状态也使用 chat-store
+        const feedbackStore = new KVStorage('feedback-kv'); // 留言板使用 feedback-kv
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
@@ -505,11 +505,29 @@ export default {
     </div>
     <div class="particles" id="particles"></div>
     <div class="container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>💬 浪漫聊天室</h3>
+                <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                <button id="sendBtn">发送 💌</button>
+            </div>
+            <div class="share-buttons">
+                <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
+            </div>
+        </div>
+        
         <div class="header">
             <h1 class="title">💕 520 💕</h1>
             <p class="subtitle">致我最爱的人LQQ</p>
             <div class="heart-line"></div>
         </div>
+        
         <div class="poem-card">
             <h2 class="poem-title">时光的温柔</h2>
             <div class="poem-content">
@@ -539,23 +557,6 @@ export default {
                 <strong>520，我爱你！</strong>
             </p>
             <p class="signature">—— 永远爱你的人</p>
-        </div>
-        
-        <div class="chat-container">
-            <div class="chat-header">
-                <h3>💬 浪漫聊天室</h3>
-                <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
-            </div>
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="输入你的心声..." />
-                <button id="sendBtn">发送 💌</button>
-            </div>
-            <div class="share-buttons">
-                <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
-            </div>
         </div>
         
         <div class="footer">
