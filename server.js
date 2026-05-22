@@ -436,6 +436,14 @@ export default {
         .footer-message p {
             font-size: 1.4rem; color: #5d4037; line-height: 2;
         }
+        .daily-message {
+            text-align: center; margin-top: 30px; padding: 30px 40px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .daily-message p {
+            font-size: 1.4rem; color: #5d4037; line-height: 1.8;
+        }
         .signature {
             margin-top: 30px; font-size: 1.2rem; color: #999; font-style: italic;
         }
