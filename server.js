@@ -585,8 +585,7 @@ export default {
         </div>
         
         <div class="header">
-            <h1 class="title">💕 520 💕</h1>
-            <p class="subtitle">致我最爱的人LQQ</p>
+            <h1 class="title">致我最爱的人LQQ：</h1>
             <div class="heart-line"></div>
         </div>
         
