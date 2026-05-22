@@ -590,35 +590,8 @@ export default {
             <div class="heart-line"></div>
         </div>
         
-        <div class="poem-card">
-            <h2 class="poem-title">时光的温柔</h2>
-            <div class="poem-content">
-                <div class="section">
-                    <p>一天很短，</p>
-                    <p>短得来不及拥抱清晨，就已经手握黄昏；</p>
-                </div>
-                <div class="section">
-                    <p>一年很短，</p>
-                    <p>短得来不及细品初春的殷红窦绿，就要打点素裹秋霜；</p>
-                </div>
-                <div class="section">
-                    <p>一生很短，</p>
-                    <p>短得来不及享用美好年华，就已经身处迟暮。</p>
-                </div>
-                <p class="final-line">而你，是我生命中最长的温柔。💝</p>
-            </div>
-        </div>
         <div class="footer-message">
-            <h2>💖 爱你一万年 💖</h2>
-            <p>
-                <span style="font-size: 2.5rem; color: #c2185b; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">LQQ</span><br><br>
-                在这个特别的日子里<br>
-                只想对你说：<br>
-                遇见你，是我最美的意外<br>
-                陪伴你，是我最长情的告白<br><br>
-                <strong>520，我爱你！</strong>
-            </p>
-            <p class="signature">—— 永远爱你的人</p>
+            <p id="romanticText"></p>
         </div>
         
         <div class="footer">
@@ -626,6 +599,32 @@ export default {
         </div>
     </div>
     <script>
+        // 浪漫句子数组（每天随机显示一段）
+        const romanticMessages = [
+            "💕 在时光长河中，你是我唯一想停靠的港湾。",
+            "💖 世界很大，我的心很小，只装得下一个你。",
+            "🌹 遇见你，是我今生最美的意外。",
+            "💝 爱是一场温柔的冒险，而你是我唯一的目的地。",
+            "✨ 你的名字，是我听过最美的情话。",
+            "🌙 愿与你一起，从心动到古稀。",
+            "💗 喜欢你，是我做过最认真的事。",
+            "🌸 余生很长，我想和你一起浪费。",
+            "💞 你是我生命中，最温暖的那束光。",
+            "🎀 爱你，是我藏在心里的秘密。",
+            "💓 你在，春华秋实夏蝉冬雪；你不在，春夏秋冬。",
+            "💘 遇见你之前，我没想过永远；遇见你之后，我没想过别人。"
+        ];
+        
+        // 根据日期获取句子（每天一段）
+        function getTodayMessage() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+            return romanticMessages[dayOfYear % romanticMessages.length];
+        }
+        
+        // 显示今日浪漫句子
+        document.getElementById('romanticText').textContent = getTodayMessage();
+        
         // 加密密钥（简单混淆）
         const ENCRYPT_KEY = 'lqq520secret';
         
