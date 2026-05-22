@@ -482,7 +482,7 @@ export default {
             opacity: 0.6; cursor: not-allowed;
         }
         .chat-messages {
-            height: 300px; overflow-y: auto;
+            height: 450px; overflow-y: auto;
             padding: 15px; background: rgba(255, 240, 245, 0.5);
             border-radius: 20px; margin-bottom: 20px;
         }
@@ -590,9 +590,6 @@ export default {
             <div class="chat-input">
                 <input type="text" id="chatInput" placeholder="输入你的心声..." />
                 <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
-            </div>
-            <div class="share-buttons">
-                <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
             </div>
         </div>
         
