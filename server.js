@@ -581,7 +581,7 @@ export default {
         
         <div class="chat-container">
             <div class="chat-header">
-                <h3>💬 浪漫聊天室</h3>
+                <h3>💬 专属聊天室</h3>
                 <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
             </div>
             <div class="chat-messages" id="chatMessages">
