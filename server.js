@@ -420,6 +420,22 @@ export default {
             color: white; padding: 8px 20px; border-radius: 20px;
             font-size: 1rem; font-weight: bold;
         }
+        .name-selector select {
+            padding: 8px 15px; border: 2px solid #ffc8dd;
+            border-radius: 20px; background: rgba(255, 240, 245, 0.9);
+            color: #e91e63; font-size: 1rem; font-weight: bold;
+            cursor: pointer; outline: none;
+        }
+        .name-selector select:hover {
+            border-color: #ff6b9d;
+        }
+        .chat-input input:disabled {
+            background: rgba(200, 200, 200, 0.5);
+            cursor: not-allowed;
+        }
+        .chat-input button:disabled {
+            opacity: 0.6; cursor: not-allowed;
+        }
         .chat-messages {
             height: 300px; overflow-y: auto;
             padding: 15px; background: rgba(255, 240, 245, 0.5);
@@ -438,6 +454,15 @@ export default {
             margin-bottom: 15px; padding: 12px 18px;
             background: linear-gradient(135deg, #fff, #ffe4ec);
             border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 75%;
+        }
+        .message.me {
+            margin-left: auto;
+            background: linear-gradient(135deg, #ffe4ec, #fff0f5);
+            border: 2px solid #ff6b9d;
+        }
+        .message.other {
+            margin-right: auto;
         }
         .message-user {
             font-weight: bold; color: #e91e63; margin-bottom: 5px;
@@ -508,14 +533,21 @@ export default {
         <div class="chat-container">
             <div class="chat-header">
                 <h3>💬 浪漫聊天室</h3>
-                <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
+                <div class="name-selector">
+                    <select id="usernameSelect" onchange="selectUsername()">
+                        <option value="">选择称呼</option>
+                        <option value="LONG">LONG</option>
+                        <option value="TAN">TAN</option>
+                    </select>
+                </div>
             </div>
             <div class="chat-messages" id="chatMessages">
                 <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
+                <div class="system-message">📌 请先选择您的称呼~</div>
             </div>
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="输入你的心声..." />
-                <button id="sendBtn">发送 💌</button>
+                <input type="text" id="chatInput" placeholder="选择称呼后才能发送消息..." disabled />
+                <button id="sendBtn" onclick="sendMessage()" disabled>发送 💌</button>
             </div>
             <div class="share-buttons">
                 <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
@@ -564,13 +596,58 @@ export default {
         </div>
     </div>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('name') || '💕 访客';
+        // 加密密钥（简单混淆）
+        const ENCRYPT_KEY = 'lqq520secret';
         
+        // 简易加密函数
+        function encrypt(str) {
+            if (!str) return '';
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                result += String.fromCharCode(str.charCodeAt(i) ^ ENCRYPT_KEY.charCodeAt(i % ENCRYPT_KEY.length));
+            }
+            return btoa(encodeURIComponent(result));
+        }
+        
+        // 简易解密函数
+        function decrypt(str) {
+            if (!str) return '';
+            try {
+                const decoded = decodeURIComponent(atob(str));
+                let result = '';
+                for (let i = 0; i < decoded.length; i++) {
+                    result += String.fromCharCode(decoded.charCodeAt(i) ^ ENCRYPT_KEY.charCodeAt(i % ENCRYPT_KEY.length));
+                }
+                return result;
+            } catch (e) {
+                return str;
+            }
+        }
+        
+        let username = '';
         let userId = localStorage.getItem('lqUserId');
         if (!userId) {
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
             localStorage.setItem('lqUserId', userId);
+        }
+        
+        function selectUsername() {
+            const select = document.getElementById('usernameSelect');
+            username = select.value;
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (username) {
+                input.placeholder = '输入你的心声...';
+                input.disabled = false;
+                sendBtn.disabled = false;
+                loadMessages();
+                fetchMessages();
+            } else {
+                input.placeholder = '选择称呼后才能发送消息...';
+                input.disabled = true;
+                sendBtn.disabled = true;
+            }
         }
         
         const container = document.getElementById('particles');
@@ -591,6 +668,7 @@ export default {
         document.head.appendChild(style);
         
         async function sendHeartbeat() {
+            if (!username) return;
             try {
                 const response = await fetch('/api/chat/online', {
                     method: 'POST',
@@ -619,6 +697,7 @@ export default {
         }
         
         async function fetchMessages() {
+            if (!username) return;
             try {
                 const response = await fetch('/api/chat/messages');
                 const data = await response.json();
@@ -663,29 +742,32 @@ export default {
             html += '<div class="system-message">📌 所有用户都能看到彼此的消息哦~</div>';
             messages.forEach(function(msg) {
                 const isMe = msg.user === username;
-                const messageClass = isMe ? 'message me' : 'message';
-                html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + msg.content + '</div><div class="message-time">' + msg.time + '</div></div>';
+                const messageClass = isMe ? 'message me' : 'message other';
+                const decryptedContent = decrypt(msg.content);
+                html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
             });
             messagesContainer.innerHTML = html;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
         async function sendMessage() {
+            if (!username) return;
             const input = document.getElementById('chatInput');
             const content = input.value.trim();
             if (!content) return;
             
+            const encryptedContent = encrypt(content);
             const tempMsg = {
                 id: Date.now().toString(),
                 user: username,
-                content: content,
+                content: encryptedContent,
                 time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                 timestamp: Date.now()
             };
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            const html = '<div class="' + messageClass + '"><div class="message-user">' + tempMsg.user + '</div><div class="message-content">' + tempMsg.content + '</div><div class="message-time">' + tempMsg.time + '</div></div>';
+            const html = '<div class="' + messageClass + '"><div class="message-user">' + tempMsg.user + '</div><div class="message-content">' + content + '</div><div class="message-time">' + tempMsg.time + '</div></div>';
             messagesContainer.innerHTML += html;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
@@ -695,7 +777,7 @@ export default {
                 const response = await fetch('/api/chat/messages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user: username, content: content })
+                    body: JSON.stringify({ user: username, content: encryptedContent })
                 });
                 
                 const data = await response.json();
