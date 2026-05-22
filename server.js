@@ -1,5 +1,29 @@
 let feedbackMessages = [];
+
+// 聊天消息存储
 let chatMessages = [];
+
+// 定期清理超过10秒的消息
+function cleanupOldMessages() {
+    const now = Date.now();
+    const TEN_SECONDS = 10000;
+    const before = chatMessages.length;
+    chatMessages = chatMessages.filter(msg => {
+        // 消息发送超过10秒则删除
+        if (msg.timestamp && (now - msg.timestamp > TEN_SECONDS)) {
+            return false;
+        }
+        return true;
+    });
+    
+    // 如果有消息被删除，同步到KV存储
+    if (chatMessages.length !== before) {
+        chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+    }
+}
+
+// 每3秒执行一次清理
+setInterval(cleanupOldMessages, 3000);
 
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
@@ -184,6 +208,7 @@ export default {
                     );
                 }
             } else if (method === 'GET') {
+                // 获取消息（只从服务器获取，不使用本地存储）
                 try {
                     const stored = await chatStore.get(CHAT_STORE_KEY);
                     if (stored) {
@@ -689,32 +714,29 @@ export default {
         }
         
         async function fetchMessages() {
-            if (!username) return;
             try {
+                // 从服务器获取消息（不使用本地存储）
                 const response = await fetch('/api/chat/messages');
                 const data = await response.json();
                 if (data.success && data.messages) {
+                    // 直接使用服务器返回的消息，不使用本地存储
                     const messages = data.messages;
                     
-                    if (messages.length > 0) {
-                        const stored = localStorage.getItem('lqChatLocal');
-                        const existingMessages = stored ? JSON.parse(stored) : [];
-                        const existingIds = new Set(existingMessages.map(m => m.id));
-                        
-                        messages.forEach(msg => {
-                            if (!existingIds.has(msg.id)) {
-                                existingMessages.push(msg);
-                            }
-                        });
-                        
-                        if (existingMessages.length > 100) {
-                            existingMessages.splice(0, existingMessages.length - 100);
-                        }
-                        
-                        localStorage.setItem('lqChatLocal', JSON.stringify(existingMessages));
-                    }
+                    // 按时间排序
+                    messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                     
-                    loadMessages();
+                    // 显示消息
+                    const messagesContainer = document.getElementById('chatMessages');
+                    let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
+                    html += '<div class="system-message">📌 消息10秒后自动消失~</div>';
+                    messages.forEach(function(msg) {
+                        const isMe = msg.user === username;
+                        const messageClass = isMe ? 'message me' : 'message other';
+                        const decryptedContent = decrypt(msg.content);
+                        html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
+                    });
+                    messagesContainer.innerHTML = html;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
             } catch (e) {
                 console.log('Fetch messages failed:', e);
@@ -722,24 +744,7 @@ export default {
         }
         
         function loadMessages() {
-            const stored = localStorage.getItem('lqChatLocal');
-            let messages = stored ? JSON.parse(stored) : [];
-            
-            messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-            localStorage.setItem('lqChatLocal', JSON.stringify(messages));
-            
-            const messagesContainer = document.getElementById('chatMessages');
-            
-            let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-            html += '<div class="system-message">📌 所有用户都能看到彼此的消息哦~</div>';
-            messages.forEach(function(msg) {
-                const isMe = msg.user === username;
-                const messageClass = isMe ? 'message me' : 'message other';
-                const decryptedContent = decrypt(msg.content);
-                html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
-            });
-            messagesContainer.innerHTML = html;
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // 不再使用本地存储，由 fetchMessages 直接更新显示
         }
         
         async function sendMessage() {
