@@ -567,6 +567,10 @@ export default {
     </div>
     <div class="particles" id="particles"></div>
     <div class="container">
+        <div class="daily-message">
+            <p id="romanticText"></p>
+        </div>
+        
         <div class="chat-container">
             <div class="chat-header">
                 <h3>💬 浪漫聊天室</h3>
@@ -582,15 +586,6 @@ export default {
             <div class="share-buttons">
                 <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
             </div>
-        </div>
-        
-        <div class="header">
-            <h1 class="title">致我最爱的人LQQ：</h1>
-            <div class="heart-line"></div>
-        </div>
-        
-        <div class="footer-message">
-            <p id="romanticText"></p>
         </div>
         
         <div class="footer">
