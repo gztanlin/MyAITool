@@ -288,7 +288,11 @@ export default {
         <h1 class="title">💕 请输入密码</h1>
         <div class="form-group">
             <label>你是谁？</label>
-            <input type="text" class="form-input" id="username" placeholder="请输入你的名字" />
+            <select class="form-input" id="username">
+                <option value="">请选择</option>
+                <option value="LONG">LONG</option>
+                <option value="TAN">TAN</option>
+            </select>
         </div>
         <div class="form-group">
             <label>请输入密码</label>
@@ -299,7 +303,15 @@ export default {
     <script>
         function submitPassword() {
             const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value.trim() || '匿名访客';
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('请选择你的名字！');
+                return;
+            }
+            if (password !== 'lqq') {
+                alert('密码错误，请重新输入！');
+                return;
+            }
             window.location.href = '/lq?pass=' + encodeURIComponent(password) + '&name=' + encodeURIComponent(username);
         }
         document.getElementById('password').addEventListener('keyup', function(e) {
@@ -533,21 +545,14 @@ export default {
         <div class="chat-container">
             <div class="chat-header">
                 <h3>💬 浪漫聊天室</h3>
-                <div class="name-selector">
-                    <select id="usernameSelect" onchange="selectUsername()">
-                        <option value="">选择称呼</option>
-                        <option value="LONG">LONG</option>
-                        <option value="TAN">TAN</option>
-                    </select>
-                </div>
+                <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
             </div>
             <div class="chat-messages" id="chatMessages">
                 <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
-                <div class="system-message">📌 请先选择您的称呼~</div>
             </div>
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="选择称呼后才能发送消息..." disabled />
-                <button id="sendBtn" onclick="sendMessage()" disabled>发送 💌</button>
+                <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
             </div>
             <div class="share-buttons">
                 <button onclick="clearChat()" class="share-btn">🗑️ 清空聊天</button>
@@ -624,31 +629,19 @@ export default {
             }
         }
         
-        let username = '';
+        // 从URL获取用户名
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('name') || '访客';
+        
         let userId = localStorage.getItem('lqUserId');
         if (!userId) {
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
             localStorage.setItem('lqUserId', userId);
         }
         
-        function selectUsername() {
-            const select = document.getElementById('usernameSelect');
-            username = select.value;
-            const input = document.getElementById('chatInput');
-            const sendBtn = document.getElementById('sendBtn');
-            
-            if (username) {
-                input.placeholder = '输入你的心声...';
-                input.disabled = false;
-                sendBtn.disabled = false;
-                loadMessages();
-                fetchMessages();
-            } else {
-                input.placeholder = '选择称呼后才能发送消息...';
-                input.disabled = true;
-                sendBtn.disabled = true;
-            }
-        }
+        // 页面加载时自动获取消息
+        loadMessages();
+        fetchMessages();
         
         const container = document.getElementById('particles');
         for(let i=0; i<30; i++) {
@@ -668,7 +661,6 @@ export default {
         document.head.appendChild(style);
         
         async function sendHeartbeat() {
-            if (!username) return;
             try {
                 const response = await fetch('/api/chat/online', {
                     method: 'POST',
@@ -751,7 +743,6 @@ export default {
         }
         
         async function sendMessage() {
-            if (!username) return;
             const input = document.getElementById('chatInput');
             const content = input.value.trim();
             if (!content) return;
@@ -792,22 +783,14 @@ export default {
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
-        document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-        
-        function clearChat() {
-            if (confirm('确定要清空所有聊天记录吗？')) {
-                localStorage.removeItem('lqChatLocal');
-                loadMessages();
-            }
-        }
-        
-        loadMessages();
+        // 启动聊天功能
         sendHeartbeat();
-        fetchMessages();
+        fetchOnlineCount();
         setInterval(sendHeartbeat, 30000);
         setInterval(fetchMessages, 3000);
+        document.getElementById('chatInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
     </script>
 </body>
 </html>`,
