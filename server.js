@@ -283,29 +283,25 @@ export default {
                 });
                 
                 // 每次请求都同步到KV（确保删除和已读状态及时同步）
-                // 写入前重新读取最新数据，避免覆盖其他请求的修改
                 if (modified) {
                     try {
-                        // 获取最新的KV数据
+                        // 重新从KV读取最新数据
                         const latestStored = await chatStore.get(CHAT_STORE_KEY);
-                        let latestMessages = [];
-                        if (latestStored) {
-                            latestMessages = JSON.parse(latestStored);
-                        }
+                        let latestMessages = latestStored ? JSON.parse(latestStored) : [];
                         
-                        // 合并修改：保留最新数据中的消息，除非我们已经删除了它们
-                        const currentIds = new Set(chatMessages.map(m => m.id));
-                        const finalMessages = latestMessages.filter(m => currentIds.has(m.id));
+                        // 只保留应该保留的消息（过滤掉需要删除的）
+                        const idsToKeep = new Set(chatMessages.map(m => m.id));
+                        const filteredMessages = latestMessages.filter(m => idsToKeep.has(m.id));
                         
-                        // 添加我们新标记的已读状态
+                        // 合并已读状态
                         chatMessages.forEach(msg => {
-                            const existing = finalMessages.find(m => m.id === msg.id);
+                            const existing = filteredMessages.find(m => m.id === msg.id);
                             if (existing && msg.readBy) {
                                 existing.readBy = { ...existing.readBy, ...msg.readBy };
                             }
                         });
                         
-                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(finalMessages));
+                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(filteredMessages));
                     } catch (e) {
                         console.log('KV sync failed:', e);
                     }
@@ -813,15 +809,16 @@ export default {
                     // 获取服务器返回的消息
                     const serverMessages = data.messages;
                     
-                    // 获取本地已确认的消息ID列表（先保存，避免后续 DOM 操作失效）
-                    const messagesContainer = document.getElementById('chatMessages');
-                    const localMsgIds = [];
-                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
-                        localMsgIds.push(el.getAttribute('data-id'));
-                    });
-                    
                     // 按时间排序服务器消息
                     serverMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    
+                    // 获取本地已确认的消息
+                    const messagesContainer = document.getElementById('chatMessages');
+                    const localMessages = [];
+                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
+                        localMessages.push(el);
+                    });
+                    const localIds = new Set(localMessages.map(el => el.getAttribute('data-id')));
                     
                     // 构建新的消息HTML
                     let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
@@ -856,9 +853,9 @@ export default {
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            // 创建临时消息元素，标记为临时
+            // 创建临时消息元素
             const tempElement = document.createElement('div');
-            tempElement.className = messageClass + ' temp-message';
+            tempElement.className = messageClass;
             tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</div>';
             messagesContainer.appendChild(tempElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -874,14 +871,9 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    // 服务器保存成功，标记消息ID，1秒后刷新列表以获取完整消息
-                    tempElement.classList.remove('temp-message');
+                    // 服务器保存成功，标记消息ID
                     tempElement.setAttribute('data-id', data.message.id);
-                    
-                    // 延迟1.5秒后刷新消息列表，确保服务器已保存
-                    setTimeout(() => {
-                        fetchMessages();
-                    }, 1500);
+                    // 等待2秒后刷新，确保KV同步完成（依赖自动刷新也可以）
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
