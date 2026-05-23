@@ -53,7 +53,10 @@ class KVStorage {
         
         if (this.kvBinding) {
             try {
-                const value = await this.kvBinding.get(key, { type: 'text' });
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('KV get timeout')), 5000);
+                });
+                const value = await Promise.race([this.kvBinding.get(key, { type: 'text' }), timeoutPromise]);
                 console.log('KV binding get success for key:', key, 'has value:', value ? 'yes' : 'no');
                 if (value) {
                     KVStorage.memoryFallback[key] = value;
@@ -67,7 +70,10 @@ class KVStorage {
         const edgeKv = this.getEdgeKV();
         if (edgeKv) {
             try {
-                const value = await edgeKv.get(key, { type: 'text' });
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('EdgeKV get timeout')), 5000);
+                });
+                const value = await Promise.race([edgeKv.get(key, { type: 'text' }), timeoutPromise]);
                 console.log('KV get success for key:', key, 'has value:', value ? 'yes' : 'no');
                 if (value) {
                     KVStorage.memoryFallback[key] = value;
@@ -96,7 +102,10 @@ class KVStorage {
         
         if (this.kvBinding) {
             try {
-                await this.kvBinding.put(key, value);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('KV put timeout')), 5000);
+                });
+                await Promise.race([this.kvBinding.put(key, value), timeoutPromise]);
                 console.log('KV binding put success for key:', key);
                 return true;
             } catch (e) {
@@ -108,7 +117,10 @@ class KVStorage {
         const edgeKv = this.getEdgeKV();
         if (edgeKv) {
             try {
-                await edgeKv.put(key, value);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('EdgeKV put timeout')), 5000);
+                });
+                await Promise.race([edgeKv.put(key, value), timeoutPromise]);
                 console.log('KV put success for key:', key);
                 return true;
             } catch (e) {
@@ -920,7 +932,6 @@ export default {
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            // 创建临时消息元素，先用临时ID
             const tempId = 'temp_' + Date.now();
             const tempElement = document.createElement('div');
             tempElement.className = messageClass;
@@ -935,11 +946,18 @@ export default {
             let saveFailed = false;
             
             try {
-                const response = await fetch('/api/chat/messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user: username, content: encryptedContent })
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('请求超时')), 10000);
                 });
+                
+                const response = await Promise.race([
+                    fetch('/api/chat/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user: username, content: encryptedContent })
+                    }),
+                    timeoutPromise
+                ]);
                 
                 const data = await response.json();
                 if (data.success && data.message) {
