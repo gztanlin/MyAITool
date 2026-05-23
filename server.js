@@ -190,15 +190,40 @@ export default {
                         timestamp: Date.now()
                     };
                     
-                    chatMessages.push(newMessage);
-                    if (chatMessages.length > 100) {
-                        chatMessages = chatMessages.slice(-100);
+                    // 先从KV读取最新数据（防止内存数据丢失）
+                    let storedMessages = [];
+                    try {
+                        const stored = await chatStore.get(CHAT_STORE_KEY);
+                        if (stored) {
+                            storedMessages = JSON.parse(stored);
+                        }
+                    } catch (e) {
+                        console.log('KV get failed:', e);
                     }
                     
-                    await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+                    storedMessages.push(newMessage);
+                    if (storedMessages.length > 100) {
+                        storedMessages = storedMessages.slice(-100);
+                    }
+                    
+                    // 重试机制确保KV写入成功
+                    const MAX_RETRIES = 3;
+                    let saved = false;
+                    for (let i = 0; i < MAX_RETRIES; i++) {
+                        try {
+                            await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
+                            saved = true;
+                            break;
+                        } catch (e) {
+                            console.log('KV put failed, attempt', i + 1, ':', e);
+                            if (i < MAX_RETRIES - 1) {
+                                await new Promise(r => setTimeout(r, 100 * (i + 1)));
+                            }
+                        }
+                    }
                     
                     return new Response(
-                        JSON.stringify({ success: true, message: newMessage, total: chatMessages.length }),
+                        JSON.stringify({ success: true, message: newMessage, total: storedMessages.length, saved: saved }),
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                     );
                 } catch (e) {
@@ -209,6 +234,7 @@ export default {
                 }
             } else if (method === 'GET') {
                 // 获取消息（只从服务器获取，不使用本地存储）
+                let chatMessages = [];
                 try {
                     const stored = await chatStore.get(CHAT_STORE_KEY);
                     if (stored) {
@@ -776,9 +802,15 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    setTimeout(() => {
-                        fetchMessages();
-                    }, 500);
+                    // 只有当服务器确认保存成功后才刷新消息列表
+                    if (data.saved !== false) {
+                        setTimeout(() => {
+                            fetchMessages();
+                        }, 500);
+                    } else {
+                        // 保存失败，保留本地显示，提示用户
+                        console.log('Message not saved to server, keeping local display');
+                    }
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
