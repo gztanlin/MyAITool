@@ -915,21 +915,24 @@ export default {
                     // 按时间排序服务器消息
                     serverMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                     
-                    // 获取本地已确认的消息（发送后服务器还没同步的消息）
                     const messagesContainer = document.getElementById('chatMessages');
-                    const localMessages = [];
-                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
-                        localMessages.push(el);
-                    });
                     
-                    // 获取服务器消息ID列表
-                    const serverIds = new Set(serverMessages.map(m => m.id));
+                    // 获取当前显示的消息ID
+                    const currentDisplayedIds = new Set();
+                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
+                        currentDisplayedIds.add(el.getAttribute('data-id'));
+                    });
                     
                     // 构建新的消息HTML
                     let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
                     
-                    // 添加服务器消息
+                    // 添加服务器消息（去重：只在ID之前未显示时才添加）
                     serverMessages.forEach(function(msg) {
+                        // 如果这条消息已经在显示中，跳过（避免重复添加）
+                        if (currentDisplayedIds.has(msg.id)) {
+                            return;
+                        }
+                        
                         const isMe = msg.user === username;
                         const messageClass = isMe ? 'message me' : 'message other';
                         const decryptedContent = decrypt(msg.content);
@@ -946,15 +949,6 @@ export default {
                         }
                         
                         html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div></div>';
-                    });
-                    
-                    // 添加本地已发送但服务器还没有的消息（防止发送后消失）
-                    localMessages.forEach(el => {
-                        const msgId = el.getAttribute('data-id');
-                        // 保留真实ID的消息，或临时ID的消息（以防POST失败或还在同步中）
-                        if (msgId && !serverIds.has(msgId)) {
-                            html += el.outerHTML;
-                        }
                     });
                     
                     messagesContainer.innerHTML = html;
