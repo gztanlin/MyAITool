@@ -269,11 +269,11 @@ export default {
                         modified = true;
                     }
                     
-                    // 检查是否需要删除：对方已读且超过10秒
+                    // 检查是否需要删除：对方已读且超过30秒（每条消息独立计时）
                     const readByOthers = Object.keys(msg.readBy).filter(r => r !== msg.user);
                     if (readByOthers.length > 0) {
                         const otherReadTime = msg.readBy[readByOthers[0]];
-                        if (now - otherReadTime > 10000) {
+                        if (now - otherReadTime > 30000) { // 30秒后删除
                             modified = true;
                             return false;
                         }
@@ -873,7 +873,10 @@ export default {
                 if (data.success) {
                     // 服务器保存成功，标记消息ID
                     tempElement.setAttribute('data-id', data.message.id);
-                    // 等待2秒后刷新，确保KV同步完成（依赖自动刷新也可以）
+                    // 延迟5秒后刷新列表，确保KV同步完成
+                    setTimeout(() => {
+                        fetchMessages();
+                    }, 5000);
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
