@@ -20,11 +20,11 @@ const HEARTBEAT_TIMEOUT = 45000;
 class KVStorage {
     static memoryFallback = {};
     
-    constructor(namespace) {
+    constructor(namespace, kvBinding = null) {
         this.namespace = namespace;
+        this.kvBinding = kvBinding;
     }
     
-    // 获取EdgeKV实例
     getEdgeKV() {
         if (typeof EdgeKV === 'undefined') {
             console.log('EdgeKV is not defined, cannot create instance');
@@ -48,6 +48,19 @@ class KVStorage {
         if (!key || key.trim() === '') {
             console.log('KV get error: key is empty');
             return null;
+        }
+        
+        if (this.kvBinding) {
+            try {
+                const value = await this.kvBinding.get(key, { type: 'text' });
+                console.log('KV binding get success for key:', key, 'has value:', value ? 'yes' : 'no');
+                if (value) {
+                    KVStorage.memoryFallback[key] = value;
+                    return value;
+                }
+            } catch (e) {
+                console.log('KV binding get error for key:', key, '-', e.message || e);
+            }
         }
         
         const edgeKv = this.getEdgeKV();
@@ -78,8 +91,18 @@ class KVStorage {
             return false;
         }
         
-        // 先保存到内存
         KVStorage.memoryFallback[key] = value;
+        
+        if (this.kvBinding) {
+            try {
+                await this.kvBinding.put(key, value);
+                console.log('KV binding put success for key:', key);
+                return true;
+            } catch (e) {
+                console.log('KV binding put error for key:', key, '-', e.message || e);
+                return false;
+            }
+        }
         
         const edgeKv = this.getEdgeKV();
         if (edgeKv) {
@@ -89,12 +112,11 @@ class KVStorage {
                 return true;
             } catch (e) {
                 console.log('KV put error for key:', key, '-', e.message || e);
-                // KV失败但内存有数据，返回true让请求继续
-                return true;
+                return false;
             }
         } else {
-            console.log('KV not available for namespace:', this.namespace, '- using memory fallback only');
-            return true;
+            console.log('KV not available for namespace:', this.namespace, '- memory only (not persistent)');
+            return false;
         }
     }
 }
@@ -103,9 +125,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('chat-store');      // 浪漫聊天室使用 chat-store
-        const onlineStore = new KVStorage('chat-store');    // 在线状态也使用 chat-store
-        const feedbackStore = new KVStorage('feedback-kv');  // 留言板使用 feedback-kv
+        const chatStore = new KVStorage('chat-store', env.CHAT_KV || null);
+        const onlineStore = new KVStorage('chat-store', env.CHAT_KV || null);
+        const feedbackStore = new KVStorage('feedback-kv', env.FEEDBACK_KV || null);
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
@@ -624,6 +646,9 @@ export default {
         .message-status.read {
             background: #28a745; color: white;
         }
+        .message-status.failed {
+            background: #dc3545; color: white;
+        }
         .system-message {
             text-align: center; color: #ff6b9d;
             font-style: italic; padding: 10px;
@@ -904,6 +929,7 @@ export default {
             input.value = '';
             
             let serverMessageId = null;
+            let saveFailed = false;
             
             try {
                 const response = await fetch('/api/chat/messages', {
@@ -914,41 +940,38 @@ export default {
                 
                 const data = await response.json();
                 if (data.success && data.message) {
-                    // 服务器保存成功，记录服务器ID
                     serverMessageId = data.message.id;
                     tempElement.setAttribute('data-id', serverMessageId);
-                    // 更新状态为未读（对方未读）
                     const statusSpan = tempElement.querySelector('.message-status');
                     if (statusSpan) {
                         statusSpan.className = 'message-status unread';
                         statusSpan.textContent = '对方未读';
                     }
+                } else {
+                    saveFailed = true;
+                    const statusSpan = tempElement.querySelector('.message-status');
+                    if (statusSpan) {
+                        statusSpan.className = 'message-status failed';
+                        statusSpan.textContent = '发送失败';
+                    }
+                    console.log('Server save failed:', data.error || 'Unknown error');
                 }
             } catch (e) {
+                saveFailed = true;
+                const statusSpan = tempElement.querySelector('.message-status');
+                if (statusSpan) {
+                    statusSpan.className = 'message-status failed';
+                    statusSpan.textContent = '发送失败';
+                }
                 console.log('Send message failed:', e);
             }
-            
-            // 5秒后检查：如果POST失败或网络错误，清除本地消息
-            setTimeout(() => {
-                // 如果服务器已经有真实ID，说明POST成功了，不需要处理
-                if (serverMessageId) {
-                    return;
-                }
-                // 没有真实ID，说明POST失败了，删除本地消息
-                const messagesContainer = document.getElementById('chatMessages');
-                const el = messagesContainer.querySelector('[data-id="' + tempId + '"]');
-                if (el) {
-                    el.parentNode.removeChild(el);
-                    console.log('Message send failed, removed from local');
-                }
-            }, 5000);
             
             // 重试函数：如果保存失败，自动重试
             let retryCount = 0;
             const maxRetries = 3;
             
             const retrySend = () => {
-                if (serverMessageId) return; // 已经有ID，不需要重试
+                if (serverMessageId) return;
                 if (retryCount >= maxRetries) {
                     console.log('Max retries reached, giving up');
                     return;
@@ -966,6 +989,7 @@ export default {
                 .then(data => {
                     if (data.success && data.message) {
                         serverMessageId = data.message.id;
+                        saveFailed = false;
                         const messagesContainer = document.getElementById('chatMessages');
                         const el = messagesContainer.querySelector('[data-id="' + tempId + '"]');
                         if (el) {
@@ -978,7 +1002,6 @@ export default {
                             console.log('Message saved successfully on retry', retryCount);
                         }
                     } else {
-                        // 继续重试
                         if (retryCount < maxRetries) {
                             setTimeout(retrySend, 1000 * retryCount);
                         }
@@ -992,12 +1015,9 @@ export default {
                 });
             };
             
-            // 如果5秒后还没有成功，启动重试
-            setTimeout(() => {
-                if (!serverMessageId && retryCount === 0) {
-                    retrySend();
-                }
-            }, 5000);
+            if (saveFailed) {
+                setTimeout(retrySend, 1000);
+            }
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
