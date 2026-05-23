@@ -890,35 +890,19 @@ export default {
                 console.log('Send message failed:', e);
             }
             
-            // 5秒后检查服务器是否有这条消息，如果没有则从本地清除
+            // 5秒后检查：如果POST失败或网络错误，清除本地消息
             setTimeout(() => {
-                const checkAndRemove = () => {
-                    const messagesContainer = document.getElementById('chatMessages');
-                    // 查找这条消息（通过临时ID或服务器ID）
-                    let targetId = serverMessageId || tempId;
-                    const el = messagesContainer.querySelector('[data-id="' + targetId + '"]');
-                    
-                    if (el) {
-                        // 发送请求检查服务器是否有这条消息
-                        fetch('/api/chat/messages?reader=' + encodeURIComponent(username))
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.success && data.messages) {
-                                    const serverIds = new Set(data.messages.map(m => m.id));
-                                    // 如果服务器没有这条消息，从本地清除
-                                    if (!serverIds.has(targetId)) {
-                                        if (el.parentNode) {
-                                            el.parentNode.removeChild(el);
-                                            console.log('Message not found on server, removed from local');
-                                        }
-                                    }
-                                }
-                            })
-                            .catch(e => console.log('Check message failed:', e));
-                    }
-                };
-                
-                checkAndRemove();
+                // 如果服务器已经有真实ID，说明POST成功了，不需要处理
+                if (serverMessageId) {
+                    return;
+                }
+                // 没有真实ID，说明POST失败了，删除本地消息
+                const messagesContainer = document.getElementById('chatMessages');
+                const el = messagesContainer.querySelector('[data-id="' + tempId + '"]');
+                if (el) {
+                    el.parentNode.removeChild(el);
+                    console.log('Message send failed, removed from local');
+                }
             }, 5000);
         }
         
