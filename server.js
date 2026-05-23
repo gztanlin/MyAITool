@@ -3,28 +3,6 @@ let feedbackMessages = [];
 // 聊天消息存储
 let chatMessages = [];
 
-// 定期清理超过10秒的消息
-function cleanupOldMessages() {
-    const now = Date.now();
-    const TEN_SECONDS = 10000;
-    const before = chatMessages.length;
-    chatMessages = chatMessages.filter(msg => {
-        // 消息发送超过10秒则删除
-        if (msg.timestamp && (now - msg.timestamp > TEN_SECONDS)) {
-            return false;
-        }
-        return true;
-    });
-    
-    // 如果有消息被删除，同步到KV存储
-    if (chatMessages.length !== before) {
-        chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
-    }
-}
-
-// 每3秒执行一次清理
-setInterval(cleanupOldMessages, 3000);
-
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
 }
@@ -875,9 +853,9 @@ export default {
                         if (isMe) {
                             const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
                             if (otherReaders.length > 0) {
-                                statusHtml = '<span class="message-status read">已读</span>';
+                                statusHtml = '<span class="message-status read">对方已读</span>';
                             } else {
-                                statusHtml = '<span class="message-status unread">未读</span>';
+                                statusHtml = '<span class="message-status unread">对方未读</span>';
                             }
                         }
                         
@@ -939,6 +917,12 @@ export default {
                     // 服务器保存成功，记录服务器ID
                     serverMessageId = data.message.id;
                     tempElement.setAttribute('data-id', serverMessageId);
+                    // 更新状态为未读（对方未读）
+                    const statusSpan = tempElement.querySelector('.message-status');
+                    if (statusSpan) {
+                        statusSpan.className = 'message-status unread';
+                        statusSpan.textContent = '对方未读';
+                    }
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
@@ -986,6 +970,11 @@ export default {
                         const el = messagesContainer.querySelector('[data-id="' + tempId + '"]');
                         if (el) {
                             el.setAttribute('data-id', serverMessageId);
+                            const statusSpan = el.querySelector('.message-status');
+                            if (statusSpan) {
+                                statusSpan.className = 'message-status unread';
+                                statusSpan.textContent = '对方未读';
+                            }
                             console.log('Message saved successfully on retry', retryCount);
                         }
                     } else {
