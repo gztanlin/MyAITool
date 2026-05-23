@@ -40,9 +40,10 @@ const FEEDBACK_STORE_KEY = 'feedback_messages';
 const HEARTBEAT_TIMEOUT = 45000;
 
 class KVStorage {
+    static memoryFallback = {};
+    
     constructor(namespace) {
         this.namespace = namespace;
-        this.memoryFallback = {};
     }
     
     async get(key) {
@@ -51,26 +52,29 @@ class KVStorage {
                 const edgeKv = new EdgeKV({ namespace: this.namespace });
                 const value = await edgeKv.get(key);
                 if (value) {
-                    this.memoryFallback[key] = value;
+                    KVStorage.memoryFallback[key] = value;
                     return value;
                 }
             }
         } catch (e) {
             console.log('EdgeKV get error:', e);
         }
-        return this.memoryFallback[key] || null;
+        return KVStorage.memoryFallback[key] || null;
     }
     
     async put(key, value) {
-        this.memoryFallback[key] = value;
+        KVStorage.memoryFallback[key] = value;
         if (this.namespace && typeof EdgeKV !== 'undefined') {
             try {
                 const edgeKv = new EdgeKV({ namespace: this.namespace });
                 await edgeKv.put(key, value);
+                return true;
             } catch (e) {
                 console.log('EdgeKV put error:', e);
+                return false;
             }
         }
+        return true;
     }
 }
 
@@ -213,16 +217,16 @@ export default {
                     
                     // 增加重试机制确保KV写入成功
                     const MAX_RETRIES = 5;
-                    const RETRY_DELAY = 200; // 每次重试延迟200ms
+                    const RETRY_DELAY = 300; // 每次重试延迟300ms
                     let saved = false;
                     for (let i = 0; i < MAX_RETRIES; i++) {
-                        try {
-                            await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
+                        const result = await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
+                        if (result) {
                             saved = true;
                             console.log('Message saved to KV on attempt', i + 1);
                             break;
-                        } catch (e) {
-                            console.log('KV put failed, attempt', i + 1, ':', e);
+                        } else {
+                            console.log('KV put failed, attempt', i + 1);
                             if (i < MAX_RETRIES - 1) {
                                 await new Promise(r => setTimeout(r, RETRY_DELAY * (i + 1)));
                             }
