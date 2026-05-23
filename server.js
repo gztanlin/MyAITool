@@ -324,20 +324,7 @@ export default {
                     if (reader && reader !== msg.user && (!msg.readBy[reader] || msg.readBy[reader] !== now)) {
                         msg.readBy[reader] = now;
                     }
-                    
-                    // 检查是否需要删除：对方已读且超过30秒（每条消息独立计时）
-                    const otherReaders = Object.keys(msg.readBy).filter(r => r !== msg.user);
-                    if (otherReaders.length > 0) {
-                        const firstOtherReader = otherReaders[0];
-                        const otherReadTime = msg.readBy[firstOtherReader];
-                        if (now - otherReadTime > 30000) { // 30秒后删除
-                            idsToDelete.push(msg.id);
-                        }
-                    }
                 });
-                
-                // 过滤掉需要删除的消息
-                chatMessages = chatMessages.filter(msg => !idsToDelete.includes(msg.id));
                 
                 // 同步到KV
                 try {
@@ -646,6 +633,19 @@ export default {
         .message-time {
             font-size: 0.8rem; color: #999; margin-top: 5px;
         }
+        .message-status {
+            font-size: 0.7rem; margin-left: 8px; padding: 2px 6px;
+            border-radius: 10px; display: inline-block;
+        }
+        .message-status.sending {
+            background: #ffc107; color: #333;
+        }
+        .message-status.unread {
+            background: #6c757d; color: white;
+        }
+        .message-status.read {
+            background: #28a745; color: white;
+        }
         .system-message {
             text-align: center; color: #ff6b9d;
             font-style: italic; padding: 10px;
@@ -863,14 +863,25 @@ export default {
                     
                     // 构建新的消息HTML
                     let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
-                    html += '<div class="system-message">📌 对方阅读后10秒消失，未阅读则一直保留~</div>';
                     
                     // 添加服务器消息
                     serverMessages.forEach(function(msg) {
                         const isMe = msg.user === username;
                         const messageClass = isMe ? 'message me' : 'message other';
                         const decryptedContent = decrypt(msg.content);
-                        html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
+                        
+                        // 计算消息状态
+                        let statusHtml = '';
+                        if (isMe) {
+                            const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                            if (otherReaders.length > 0) {
+                                statusHtml = '<span class="message-status read">已读</span>';
+                            } else {
+                                statusHtml = '<span class="message-status unread">未读</span>';
+                            }
+                        }
+                        
+                        html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div></div>';
                     });
                     
                     // 添加本地已发送但服务器还没有的消息（防止发送后消失）
@@ -908,7 +919,7 @@ export default {
             const tempElement = document.createElement('div');
             tempElement.className = messageClass;
             tempElement.setAttribute('data-id', tempId);
-            tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</div>';
+            tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' <span class="message-status sending">发送中</span></div>';
             messagesContainer.appendChild(tempElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
