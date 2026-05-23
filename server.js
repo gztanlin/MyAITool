@@ -42,28 +42,27 @@ const HEARTBEAT_TIMEOUT = 45000;
 class KVStorage {
     static memoryFallback = {};
     
-    constructor(namespace, env) {
+    constructor(namespace) {
         this.namespace = namespace;
-        this.env = env;
     }
     
-    // 获取绑定的KV对象
-    getKVObject() {
-        // ESA平台通过env访问KV bindings
-        // namespace对应env中的binding名称
-        if (this.env && this.namespace) {
-            // ESA KV bindings通常命名为 NAMESPACE_KV 或直接使用 namespace
-            const kvName = this.namespace.replace(/-/g, '_').toUpperCase();
-            return this.env[kvName] || this.env[this.namespace];
+    // 获取EdgeKV实例
+    getEdgeKV() {
+        if (this.namespace && typeof EdgeKV !== 'undefined') {
+            try {
+                return new EdgeKV({ namespace: this.namespace });
+            } catch (e) {
+                console.log('EdgeKV init error:', e);
+            }
         }
         return null;
     }
     
     async get(key) {
-        const kvObj = this.getKVObject();
-        if (kvObj) {
+        const edgeKv = this.getEdgeKV();
+        if (edgeKv) {
             try {
-                const value = await kvObj.get(key);
+                const value = await edgeKv.get(key, { type: 'text' });
                 if (value) {
                     KVStorage.memoryFallback[key] = value;
                     return value;
@@ -79,10 +78,10 @@ class KVStorage {
         // 先保存到内存
         KVStorage.memoryFallback[key] = value;
         
-        const kvObj = this.getKVObject();
-        if (kvObj) {
+        const edgeKv = this.getEdgeKV();
+        if (edgeKv) {
             try {
-                await kvObj.put(key, value);
+                await edgeKv.put(key, value);
                 console.log('KV put success for key:', key);
                 return true;
             } catch (e) {
@@ -101,9 +100,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('chat-store', env);      // 浪漫聊天室使用 chat-store
-        const onlineStore = new KVStorage('chat-store', env);    // 在线状态也使用 chat-store
-        const feedbackStore = new KVStorage('feedback-kv', env);  // 留言板使用 feedback-kv
+        const chatStore = new KVStorage('chat-store');      // 浪漫聊天室使用 chat-store
+        const onlineStore = new KVStorage('chat-store');    // 在线状态也使用 chat-store
+        const feedbackStore = new KVStorage('feedback-kv');  // 留言板使用 feedback-kv
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
