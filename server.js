@@ -21,7 +21,8 @@ class KVStorage {
     static memoryFallback = {};
     
     constructor(namespace, kvBinding = null) {
-        this.namespace = namespace;
+        // 阿里云 ESA 使用 EDGEKV_NAMESPACE 环境变量
+        this.namespace = namespace || process.env.EDGEKV_NAMESPACE || 'chat-store';
         this.kvBinding = kvBinding;
     }
     
@@ -125,9 +126,11 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('chat-store', env.CHAT_KV || null);
-        const onlineStore = new KVStorage('chat-store', env.CHAT_KV || null);
-        const feedbackStore = new KVStorage('feedback-kv', env.FEEDBACK_KV || null);
+        // 阿里云 ESA: 使用 EDGEKV_NAMESPACE 环境变量，不依赖 env 绑定
+        const kvNamespace = env.EDGEKV_NAMESPACE || 'chat-store';
+        const chatStore = new KVStorage(kvNamespace);
+        const onlineStore = new KVStorage(kvNamespace);
+        const feedbackStore = new KVStorage('feedback-kv');
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {

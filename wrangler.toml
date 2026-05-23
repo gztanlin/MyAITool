@@ -2,23 +2,17 @@ name = "my-ai-tool"
 main = "server.js"
 compatibility_date = "2024-01-01"
 
-# 开发环境配置
+# 阿里云 ESA 配置说明：
+# 1. 在 ESA 控制台创建 KV 存储空间（如 chat-store）
+# 2. 在边缘函数配置环境变量 EDGEKV_NAMESPACE=chat-store
+# 3. 函数代码中使用 EdgeKV API 访问存储
+
 [dev]
 port = 8787
 local_protocol = "http"
 
-# 生产环境配置
 [env.production]
 name = "my-ai-tool-production"
-compatibility_date = "2024-01-01"
 
-# 测试环境配置
 [env.staging]
 name = "my-ai-tool-staging"
-compatibility_date = "2024-01-01"
-
-# KV存储绑定（用于聊天室消息存储）
-[[kv_namespaces]]
-binding = "CHAT_KV"
-id = "" # 需要在Cloudflare控制台获取
-preview_id = "" # 需要在Cloudflare控制台获取
