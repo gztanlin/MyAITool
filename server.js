@@ -887,33 +887,34 @@ export default {
             }
             
             // 5秒后检查服务器是否有这条消息，如果没有则从本地清除
-            setTimeout(async () => {
-                try {
-                    const response = await fetch('/api/chat/messages?reader=' + encodeURIComponent(username));
-                    const data = await response.json();
-                    if (data.success && data.messages) {
-                        const serverIds = new Set(data.messages.map(m => m.id));
-                        // 如果是临时ID或者服务器没有这条消息，删除本地显示
-                        if (serverMessageId) {
-                            // 已经有服务器ID，检查服务器是否有
-                            if (!serverIds.has(serverMessageId)) {
-                                // 服务器没有，清除本地消息
-                                if (tempElement.parentNode) {
-                                    tempElement.parentNode.removeChild(tempElement);
-                                    console.log('Message not found on server, removed from local');
+            setTimeout(() => {
+                const checkAndRemove = () => {
+                    const messagesContainer = document.getElementById('chatMessages');
+                    // 查找这条消息（通过临时ID或服务器ID）
+                    let targetId = serverMessageId || tempId;
+                    const el = messagesContainer.querySelector('[data-id="' + targetId + '"]');
+                    
+                    if (el) {
+                        // 发送请求检查服务器是否有这条消息
+                        fetch('/api/chat/messages?reader=' + encodeURIComponent(username))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success && data.messages) {
+                                    const serverIds = new Set(data.messages.map(m => m.id));
+                                    // 如果服务器没有这条消息，从本地清除
+                                    if (!serverIds.has(targetId)) {
+                                        if (el.parentNode) {
+                                            el.parentNode.removeChild(el);
+                                            console.log('Message not found on server, removed from local');
+                                        }
+                                    }
                                 }
-                            }
-                        } else {
-                            // 还是临时ID，说明POST失败，清除本地消息
-                            if (tempElement.parentNode) {
-                                tempElement.parentNode.removeChild(tempElement);
-                                console.log('Message send failed, removed from local');
-                            }
-                        }
+                            })
+                            .catch(e => console.log('Check message failed:', e));
                     }
-                } catch (e) {
-                    console.log('Check message failed:', e);
-                }
+                };
+                
+                checkAndRemove();
             }, 5000);
         }
         
