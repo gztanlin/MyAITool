@@ -790,22 +790,31 @@ export default {
                 const response = await fetch('/api/chat/messages?reader=' + encodeURIComponent(username));
                 const data = await response.json();
                 if (data.success && data.messages) {
-                    // 直接使用服务器返回的消息，不使用本地存储
-                    const messages = data.messages;
+                    // 获取服务器返回的消息
+                    const serverMessages = data.messages;
                     
-                    // 按时间排序
-                    messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-                    
-                    // 显示消息
+                    // 获取本地已确认的消息ID列表（先保存，避免后续 DOM 操作失效）
                     const messagesContainer = document.getElementById('chatMessages');
+                    const localMsgIds = [];
+                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
+                        localMsgIds.push(el.getAttribute('data-id'));
+                    });
+                    
+                    // 按时间排序服务器消息
+                    serverMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    
+                    // 构建新的消息HTML
                     let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
                     html += '<div class="system-message">📌 对方阅读后10秒消失，未阅读则一直保留~</div>';
-                    messages.forEach(function(msg) {
+                    
+                    // 添加服务器消息
+                    serverMessages.forEach(function(msg) {
                         const isMe = msg.user === username;
                         const messageClass = isMe ? 'message me' : 'message other';
                         const decryptedContent = decrypt(msg.content);
-                        html += '<div class="' + messageClass + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
+                        html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
                     });
+                    
                     messagesContainer.innerHTML = html;
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
@@ -827,9 +836,9 @@ export default {
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            // 先显示消息（不设置data-id，等服务器返回后再更新）
+            // 创建临时消息元素，标记为临时
             const tempElement = document.createElement('div');
-            tempElement.className = messageClass;
+            tempElement.className = messageClass + ' temp-message';
             tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</div>';
             messagesContainer.appendChild(tempElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -845,8 +854,14 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    // 服务器保存成功，更新显示的消息
+                    // 服务器保存成功，标记消息ID，1秒后刷新列表以获取完整消息
+                    tempElement.classList.remove('temp-message');
                     tempElement.setAttribute('data-id', data.message.id);
+                    
+                    // 延迟1.5秒后刷新消息列表，确保服务器已保存
+                    setTimeout(() => {
+                        fetchMessages();
+                    }, 1500);
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
