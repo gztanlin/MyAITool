@@ -344,13 +344,24 @@ export default {
             } else if (method === 'GET') {
                 // 获取消息（只从服务器获取，不使用本地存储）
                 let chatMessages = [];
+                let hasData = false;
                 try {
                     const stored = await chatStore.get(CHAT_STORE_KEY);
                     if (stored) {
                         chatMessages = JSON.parse(stored);
+                        hasData = true;
                     }
                 } catch (e) {
                     console.log('KV get failed:', e);
+                }
+                
+                // 如果 KV 为空，不执行任何写入操作，避免覆盖数据
+                if (!hasData) {
+                    console.log('KV is empty, skipping sync');
+                    return new Response(
+                        JSON.stringify({ success: true, messages: [], onlineCount: 0 }),
+                        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                    );
                 }
                 
                 // 获取阅读者参数
@@ -358,8 +369,7 @@ export default {
                 const reader = urlObj.searchParams.get('reader');
                 const now = Date.now();
                 
-                // 更新消息的已读状态，并删除符合条件的消息
-                let idsToDelete = [];
+                let messageUpdated = false;
                 chatMessages.forEach(msg => {
                     // 初始化 readBy 如果不存在
                     if (!msg.readBy) {
@@ -369,14 +379,17 @@ export default {
                     // 如果有阅读者参数，标记已读（但不标记发送者）
                     if (reader && reader !== msg.user && (!msg.readBy[reader] || msg.readBy[reader] !== now)) {
                         msg.readBy[reader] = now;
+                        messageUpdated = true;
                     }
                 });
                 
-                // 同步到KV
-                try {
-                    await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
-                } catch (e) {
-                    console.log('KV sync failed:', e);
+                // 只有当消息状态实际发生变化时才同步到KV
+                if (messageUpdated) {
+                    try {
+                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+                    } catch (e) {
+                        console.log('KV sync failed:', e);
+                    }
                 }
                 
                 return new Response(
