@@ -48,33 +48,58 @@ class KVStorage {
     
     // 获取EdgeKV实例
     getEdgeKV() {
-        if (this.namespace && typeof EdgeKV !== 'undefined') {
-            try {
-                return new EdgeKV({ namespace: this.namespace });
-            } catch (e) {
-                console.log('EdgeKV init error:', e);
-            }
+        if (typeof EdgeKV === 'undefined') {
+            console.log('EdgeKV is not defined, cannot create instance');
+            return null;
         }
-        return null;
+        if (!this.namespace || this.namespace.trim() === '') {
+            console.log('Namespace is empty or invalid:', this.namespace);
+            return null;
+        }
+        try {
+            const edgeKv = new EdgeKV({ namespace: this.namespace });
+            console.log('EdgeKV instance created successfully for namespace:', this.namespace);
+            return edgeKv;
+        } catch (e) {
+            console.log('EdgeKV init error:', e.message || e);
+            return null;
+        }
     }
     
     async get(key) {
+        if (!key || key.trim() === '') {
+            console.log('KV get error: key is empty');
+            return null;
+        }
+        
         const edgeKv = this.getEdgeKV();
         if (edgeKv) {
             try {
                 const value = await edgeKv.get(key, { type: 'text' });
+                console.log('KV get success for key:', key, 'has value:', value ? 'yes' : 'no');
                 if (value) {
                     KVStorage.memoryFallback[key] = value;
                     return value;
                 }
             } catch (e) {
-                console.log('KV get error:', e);
+                console.log('KV get error for key:', key, '-', e.message || e);
             }
         }
-        return KVStorage.memoryFallback[key] || null;
+        const fallbackValue = KVStorage.memoryFallback[key];
+        console.log('Using memory fallback for key:', key, 'has value:', fallbackValue ? 'yes' : 'no');
+        return fallbackValue || null;
     }
     
     async put(key, value) {
+        if (!key || key.trim() === '') {
+            console.log('KV put error: key is empty');
+            return false;
+        }
+        if (value === undefined || value === null) {
+            console.log('KV put error: value is null/undefined for key:', key);
+            return false;
+        }
+        
         // 先保存到内存
         KVStorage.memoryFallback[key] = value;
         
@@ -85,12 +110,12 @@ class KVStorage {
                 console.log('KV put success for key:', key);
                 return true;
             } catch (e) {
-                console.log('KV put error:', e);
-                // 即使KV失败，memoryFallback有数据，返回true让请求继续
+                console.log('KV put error for key:', key, '-', e.message || e);
+                // KV失败但内存有数据，返回true让请求继续
                 return true;
             }
         } else {
-            console.log('KV not available, using memory fallback only');
+            console.log('KV not available for namespace:', this.namespace, '- using memory fallback only');
             return true;
         }
     }
