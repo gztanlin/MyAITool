@@ -812,13 +812,15 @@ export default {
                     // 按时间排序服务器消息
                     serverMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                     
-                    // 获取本地已确认的消息
+                    // 获取本地已确认的消息（发送后服务器还没同步的消息）
                     const messagesContainer = document.getElementById('chatMessages');
                     const localMessages = [];
                     messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
                         localMessages.push(el);
                     });
-                    const localIds = new Set(localMessages.map(el => el.getAttribute('data-id')));
+                    
+                    // 获取服务器消息ID列表
+                    const serverIds = new Set(serverMessages.map(m => m.id));
                     
                     // 构建新的消息HTML
                     let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
@@ -830,6 +832,14 @@ export default {
                         const messageClass = isMe ? 'message me' : 'message other';
                         const decryptedContent = decrypt(msg.content);
                         html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + '</div></div>';
+                    });
+                    
+                    // 添加本地已发送但服务器还没有的消息（防止发送后消失）
+                    localMessages.forEach(el => {
+                        const msgId = el.getAttribute('data-id');
+                        if (msgId && !serverIds.has(msgId)) {
+                            html += el.outerHTML;
+                        }
                     });
                     
                     messagesContainer.innerHTML = html;
