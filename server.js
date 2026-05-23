@@ -898,7 +898,7 @@ export default {
         sendHeartbeat();
         fetchOnlineCount();
         setInterval(sendHeartbeat, 30000);
-        setInterval(fetchMessages, 1000); // 1秒刷新一次，确保消息删除及时
+        setInterval(fetchMessages, 5000); // 5秒刷新一次
         document.getElementById('chatInput').addEventListener('keyup', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
