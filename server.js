@@ -216,7 +216,7 @@ export default {
                     }
                     
                     // 增加重试机制确保KV写入成功
-                    const MAX_RETRIES = 5;
+                    const MAX_RETRIES = 10;
                     const RETRY_DELAY = 1000; // 每次重试延迟1000ms
                     let saved = false;
                     for (let i = 0; i < MAX_RETRIES; i++) {
