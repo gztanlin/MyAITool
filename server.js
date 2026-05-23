@@ -289,15 +289,34 @@ export default {
                         
                         const result = await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
                         if (result) {
-                            saved = true;
-                            console.log('Message saved to KV on attempt', attempt + 1);
-                            break;
-                        } else {
-                            console.log('KV put failed, attempt', attempt + 1);
-                            // 移除刚才添加的消息，以便下次重试
+                            // 验证写入是否成功：重新读取并检查消息是否存在
+                            try {
+                                const verifyStored = await chatStore.get(CHAT_STORE_KEY);
+                                if (verifyStored) {
+                                    const verifyMessages = JSON.parse(verifyStored);
+                                    const messageExists = verifyMessages.some(msg => msg.id === newMessage.id);
+                                    if (messageExists) {
+                                        saved = true;
+                                        console.log('Message verified in KV on attempt', attempt + 1);
+                                        break;
+                                    } else {
+                                        console.log('Message NOT found in KV after put, retrying...');
+                                    }
+                                } else {
+                                    console.log('KV returned empty after put, retrying...');
+                                }
+                            } catch (e) {
+                                console.log('Verification read failed:', e.message || e);
+                            }
+                            // 验证失败，继续重试
                             storedMessages.pop();
                             if (attempt < MAX_RETRIES - 1) {
-                                // 指数退避延迟
+                                await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+                            }
+                        } else {
+                            console.log('KV put failed, attempt', attempt + 1);
+                            storedMessages.pop();
+                            if (attempt < MAX_RETRIES - 1) {
                                 await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
                             }
                         }
