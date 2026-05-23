@@ -283,9 +283,29 @@ export default {
                 });
                 
                 // 每次请求都同步到KV（确保删除和已读状态及时同步）
+                // 写入前重新读取最新数据，避免覆盖其他请求的修改
                 if (modified) {
                     try {
-                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+                        // 获取最新的KV数据
+                        const latestStored = await chatStore.get(CHAT_STORE_KEY);
+                        let latestMessages = [];
+                        if (latestStored) {
+                            latestMessages = JSON.parse(latestStored);
+                        }
+                        
+                        // 合并修改：保留最新数据中的消息，除非我们已经删除了它们
+                        const currentIds = new Set(chatMessages.map(m => m.id));
+                        const finalMessages = latestMessages.filter(m => currentIds.has(m.id));
+                        
+                        // 添加我们新标记的已读状态
+                        chatMessages.forEach(msg => {
+                            const existing = finalMessages.find(m => m.id === msg.id);
+                            if (existing && msg.readBy) {
+                                existing.readBy = { ...existing.readBy, ...msg.readBy };
+                            }
+                        });
+                        
+                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(finalMessages));
                     } catch (e) {
                         console.log('KV sync failed:', e);
                     }
