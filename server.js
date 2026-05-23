@@ -904,6 +904,57 @@ export default {
                     console.log('Message send failed, removed from local');
                 }
             }, 5000);
+            
+            // 重试函数：如果保存失败，自动重试
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            const retrySend = () => {
+                if (serverMessageId) return; // 已经有ID，不需要重试
+                if (retryCount >= maxRetries) {
+                    console.log('Max retries reached, giving up');
+                    return;
+                }
+                
+                retryCount++;
+                console.log('Retrying send message, attempt', retryCount);
+                
+                fetch('/api/chat/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: username, content: encryptedContent })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.message) {
+                        serverMessageId = data.message.id;
+                        const messagesContainer = document.getElementById('chatMessages');
+                        const el = messagesContainer.querySelector('[data-id="' + tempId + '"]');
+                        if (el) {
+                            el.setAttribute('data-id', serverMessageId);
+                            console.log('Message saved successfully on retry', retryCount);
+                        }
+                    } else {
+                        // 继续重试
+                        if (retryCount < maxRetries) {
+                            setTimeout(retrySend, 1000 * retryCount);
+                        }
+                    }
+                })
+                .catch(e => {
+                    console.log('Retry failed:', e);
+                    if (retryCount < maxRetries) {
+                        setTimeout(retrySend, 1000 * retryCount);
+                    }
+                });
+            };
+            
+            // 如果5秒后还没有成功，启动重试
+            setTimeout(() => {
+                if (!serverMessageId && retryCount === 0) {
+                    retrySend();
+                }
+            }, 5000);
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
