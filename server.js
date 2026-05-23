@@ -33,8 +33,12 @@ class KVStorage {
             return null;
         }
         try {
-            const edgeKv = new EdgeKV({ namespace: this.namespace });
-            console.log('EdgeKV instance created successfully for namespace:', this.namespace);
+            // 阿里云 ESA: EdgeKV 需要 id 和 namespace 两个参数
+            const edgeKv = new EdgeKV({ 
+                namespace: this.namespace,
+                id: this.namespace // 使用 namespace 名称作为 ID
+            });
+            console.log('EdgeKV instance created for namespace:', this.namespace);
             return edgeKv;
         } catch (e) {
             console.log('EdgeKV init error:', e.message || e);
@@ -63,12 +67,13 @@ class KVStorage {
         }
         
         const edgeKv = this.getEdgeKV();
+        console.log('EdgeKV instance:', edgeKv ? 'created' : 'NULL');
         if (edgeKv) {
             try {
                 const timeoutPromise = new Promise((_, reject) => {
                     setTimeout(() => reject(new Error('EdgeKV get timeout')), 5000);
                 });
-                const value = await Promise.race([edgeKv.get(key, { type: 'text' }), timeoutPromise]);
+                const value = await Promise.race([edgeKv.get(key), timeoutPromise]);
                 console.log('KV get success for key:', key, 'has value:', value ? 'yes' : 'no');
                 return value;
             } catch (e) {
@@ -91,6 +96,8 @@ class KVStorage {
             return false;
         }
         
+        console.log('KV put attempt for key:', key, 'namespace:', this.namespace, 'kvBinding:', !!this.kvBinding);
+        
         if (this.kvBinding) {
             try {
                 const timeoutPromise = new Promise((_, reject) => {
@@ -106,6 +113,7 @@ class KVStorage {
         }
         
         const edgeKv = this.getEdgeKV();
+        console.log('EdgeKV instance:', edgeKv ? 'created' : 'NULL');
         if (edgeKv) {
             try {
                 const timeoutPromise = new Promise((_, reject) => {
@@ -119,7 +127,7 @@ class KVStorage {
                 return false;
             }
         } else {
-            console.log('KV not available for namespace:', this.namespace);
+            console.log('KV not available for namespace:', this.namespace, '- KV put FAILED');
             return false;
         }
     }
