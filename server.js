@@ -253,26 +253,28 @@ export default {
                 const urlObj = new URL(req.url, 'http://localhost');
                 const reader = urlObj.searchParams.get('reader');
                 const now = Date.now();
+                let modified = false;
                 
                 // 更新消息的已读状态，并删除符合条件的消息
-                let messagesToDelete = [];
                 chatMessages = chatMessages.filter(msg => {
                     // 初始化 readBy 如果不存在
                     if (!msg.readBy) {
                         msg.readBy = {};
+                        modified = true;
                     }
                     
                     // 如果有阅读者参数，标记已读（但不标记发送者）
-                    if (reader && reader !== msg.user) {
+                    if (reader && reader !== msg.user && (!msg.readBy[reader] || msg.readBy[reader] !== now)) {
                         msg.readBy[reader] = now;
+                        modified = true;
                     }
                     
-                    // 检查是否需要删除：双方都已读且超过10秒
+                    // 检查是否需要删除：对方已读且超过10秒
                     const readByOthers = Object.keys(msg.readBy).filter(r => r !== msg.user);
                     if (readByOthers.length > 0) {
                         const otherReadTime = msg.readBy[readByOthers[0]];
                         if (now - otherReadTime > 10000) {
-                            messagesToDelete.push(msg.id);
+                            modified = true;
                             return false;
                         }
                     }
@@ -280,12 +282,12 @@ export default {
                     return true;
                 });
                 
-                // 如果有消息要删除，同步到KV
-                if (messagesToDelete.length > 0) {
+                // 每次请求都同步到KV（确保删除和已读状态及时同步）
+                if (modified) {
                     try {
                         await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
                     } catch (e) {
-                        console.log('KV delete sync failed:', e);
+                        console.log('KV sync failed:', e);
                     }
                 }
                 
@@ -822,18 +824,14 @@ export default {
             if (!content) return;
             
             const encryptedContent = encrypt(content);
-            const tempMsg = {
-                id: Date.now().toString(),
-                user: username,
-                content: encryptedContent,
-                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                timestamp: Date.now()
-            };
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            const html = '<div class="' + messageClass + '"><div class="message-user">' + tempMsg.user + '</div><div class="message-content">' + content + '</div><div class="message-time">' + tempMsg.time + '</div></div>';
-            messagesContainer.innerHTML += html;
+            // 先显示消息（不设置data-id，等服务器返回后再更新）
+            const tempElement = document.createElement('div');
+            tempElement.className = messageClass;
+            tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</div>';
+            messagesContainer.appendChild(tempElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             input.value = '';
@@ -847,15 +845,8 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    // 只有当服务器确认保存成功后才刷新消息列表
-                    if (data.saved !== false) {
-                        setTimeout(() => {
-                            fetchMessages();
-                        }, 500);
-                    } else {
-                        // 保存失败，保留本地显示，提示用户
-                        console.log('Message not saved to server, keeping local display');
-                    }
+                    // 服务器保存成功，更新显示的消息
+                    tempElement.setAttribute('data-id', data.message.id);
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
@@ -867,7 +858,7 @@ export default {
         sendHeartbeat();
         fetchOnlineCount();
         setInterval(sendHeartbeat, 30000);
-        setInterval(fetchMessages, 3000);
+        setInterval(fetchMessages, 1000); // 1秒刷新一次，确保消息删除及时
         document.getElementById('chatInput').addEventListener('keyup', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
