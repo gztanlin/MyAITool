@@ -42,39 +42,58 @@ const HEARTBEAT_TIMEOUT = 45000;
 class KVStorage {
     static memoryFallback = {};
     
-    constructor(namespace) {
+    constructor(namespace, env) {
         this.namespace = namespace;
+        this.env = env;
+    }
+    
+    // 获取绑定的KV对象
+    getKVObject() {
+        // ESA平台通过env访问KV bindings
+        // namespace对应env中的binding名称
+        if (this.env && this.namespace) {
+            // ESA KV bindings通常命名为 NAMESPACE_KV 或直接使用 namespace
+            const kvName = this.namespace.replace(/-/g, '_').toUpperCase();
+            return this.env[kvName] || this.env[this.namespace];
+        }
+        return null;
     }
     
     async get(key) {
-        try {
-            if (this.namespace && typeof EdgeKV !== 'undefined') {
-                const edgeKv = new EdgeKV({ namespace: this.namespace });
-                const value = await edgeKv.get(key);
+        const kvObj = this.getKVObject();
+        if (kvObj) {
+            try {
+                const value = await kvObj.get(key);
                 if (value) {
                     KVStorage.memoryFallback[key] = value;
                     return value;
                 }
+            } catch (e) {
+                console.log('KV get error:', e);
             }
-        } catch (e) {
-            console.log('EdgeKV get error:', e);
         }
         return KVStorage.memoryFallback[key] || null;
     }
     
     async put(key, value) {
+        // 先保存到内存
         KVStorage.memoryFallback[key] = value;
-        if (this.namespace && typeof EdgeKV !== 'undefined') {
+        
+        const kvObj = this.getKVObject();
+        if (kvObj) {
             try {
-                const edgeKv = new EdgeKV({ namespace: this.namespace });
-                await edgeKv.put(key, value);
+                await kvObj.put(key, value);
+                console.log('KV put success for key:', key);
                 return true;
             } catch (e) {
-                console.log('EdgeKV put error:', e);
-                return false;
+                console.log('KV put error:', e);
+                // 即使KV失败，memoryFallback有数据，返回true让请求继续
+                return true;
             }
+        } else {
+            console.log('KV not available, using memory fallback only');
+            return true;
         }
-        return true;
     }
 }
 
@@ -82,9 +101,9 @@ export default {
     async fetch(req, env) {
         const { url, method } = req;
         
-        const chatStore = new KVStorage('chat-store');      // 浪漫聊天室使用 chat-store
-        const onlineStore = new KVStorage('chat-store');    // 在线状态也使用 chat-store
-        const feedbackStore = new KVStorage('feedback-kv'); // 留言板使用 feedback-kv
+        const chatStore = new KVStorage('chat-store', env);      // 浪漫聊天室使用 chat-store
+        const onlineStore = new KVStorage('chat-store', env);    // 在线状态也使用 chat-store
+        const feedbackStore = new KVStorage('feedback-kv', env);  // 留言板使用 feedback-kv
         
         // Load feedback messages from KV
         if (feedbackMessages.length === 0) {
