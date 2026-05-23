@@ -253,58 +253,39 @@ export default {
                 const urlObj = new URL(req.url, 'http://localhost');
                 const reader = urlObj.searchParams.get('reader');
                 const now = Date.now();
-                let modified = false;
                 
                 // 更新消息的已读状态，并删除符合条件的消息
-                chatMessages = chatMessages.filter(msg => {
+                let idsToDelete = [];
+                chatMessages.forEach(msg => {
                     // 初始化 readBy 如果不存在
                     if (!msg.readBy) {
                         msg.readBy = {};
-                        modified = true;
                     }
                     
                     // 如果有阅读者参数，标记已读（但不标记发送者）
                     if (reader && reader !== msg.user && (!msg.readBy[reader] || msg.readBy[reader] !== now)) {
                         msg.readBy[reader] = now;
-                        modified = true;
                     }
                     
                     // 检查是否需要删除：对方已读且超过30秒（每条消息独立计时）
-                    const readByOthers = Object.keys(msg.readBy).filter(r => r !== msg.user);
-                    if (readByOthers.length > 0) {
-                        const otherReadTime = msg.readBy[readByOthers[0]];
+                    const otherReaders = Object.keys(msg.readBy).filter(r => r !== msg.user);
+                    if (otherReaders.length > 0) {
+                        const firstOtherReader = otherReaders[0];
+                        const otherReadTime = msg.readBy[firstOtherReader];
                         if (now - otherReadTime > 30000) { // 30秒后删除
-                            modified = true;
-                            return false;
+                            idsToDelete.push(msg.id);
                         }
                     }
-                    
-                    return true;
                 });
                 
-                // 每次请求都同步到KV（确保删除和已读状态及时同步）
-                if (modified) {
-                    try {
-                        // 重新从KV读取最新数据
-                        const latestStored = await chatStore.get(CHAT_STORE_KEY);
-                        let latestMessages = latestStored ? JSON.parse(latestStored) : [];
-                        
-                        // 只保留应该保留的消息（过滤掉需要删除的）
-                        const idsToKeep = new Set(chatMessages.map(m => m.id));
-                        const filteredMessages = latestMessages.filter(m => idsToKeep.has(m.id));
-                        
-                        // 合并已读状态
-                        chatMessages.forEach(msg => {
-                            const existing = filteredMessages.find(m => m.id === msg.id);
-                            if (existing && msg.readBy) {
-                                existing.readBy = { ...existing.readBy, ...msg.readBy };
-                            }
-                        });
-                        
-                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(filteredMessages));
-                    } catch (e) {
-                        console.log('KV sync failed:', e);
-                    }
+                // 过滤掉需要删除的消息
+                chatMessages = chatMessages.filter(msg => !idsToDelete.includes(msg.id));
+                
+                // 同步到KV
+                try {
+                    await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+                } catch (e) {
+                    console.log('KV sync failed:', e);
                 }
                 
                 return new Response(
@@ -837,6 +818,7 @@ export default {
                     // 添加本地已发送但服务器还没有的消息（防止发送后消失）
                     localMessages.forEach(el => {
                         const msgId = el.getAttribute('data-id');
+                        // 保留真实ID的消息，或临时ID的消息（以防POST失败或还在同步中）
                         if (msgId && !serverIds.has(msgId)) {
                             html += el.outerHTML;
                         }
@@ -863,9 +845,11 @@ export default {
             
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
-            // 创建临时消息元素
+            // 创建临时消息元素，先用临时ID
+            const tempId = 'temp_' + Date.now();
             const tempElement = document.createElement('div');
             tempElement.className = messageClass;
+            tempElement.setAttribute('data-id', tempId);
             tempElement.innerHTML = '<div class="message-user">' + username + '</div><div class="message-content">' + content + '</div><div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</div>';
             messagesContainer.appendChild(tempElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -881,7 +865,7 @@ export default {
                 
                 const data = await response.json();
                 if (data.success) {
-                    // 服务器保存成功，标记消息ID
+                    // 服务器保存成功，更新为真实ID
                     tempElement.setAttribute('data-id', data.message.id);
                     // 延迟5秒后刷新列表，确保KV同步完成
                     setTimeout(() => {
