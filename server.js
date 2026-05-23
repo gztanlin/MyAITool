@@ -182,13 +182,18 @@ export default {
             if (method === 'POST') {
                 try {
                     const body = await req.json();
+                    const now = Date.now();
                     const newMessage = {
                         id: generateId(),
                         user: body.user || '匿名用户',
                         content: body.content,
                         time: getCurrentTime(),
-                        timestamp: Date.now()
+                        timestamp: now,
+                        readBy: {} // 初始化已读记录
                     };
+                    
+                    // 发送者立即标记为已读
+                    newMessage.readBy[body.user] = now;
                     
                     // 先从KV读取最新数据（防止内存数据丢失）
                     let storedMessages = [];
@@ -242,6 +247,46 @@ export default {
                     }
                 } catch (e) {
                     console.log('KV get failed:', e);
+                }
+                
+                // 获取阅读者参数
+                const urlObj = new URL(req.url, 'http://localhost');
+                const reader = urlObj.searchParams.get('reader');
+                const now = Date.now();
+                
+                // 更新消息的已读状态，并删除符合条件的消息
+                let messagesToDelete = [];
+                chatMessages = chatMessages.filter(msg => {
+                    // 初始化 readBy 如果不存在
+                    if (!msg.readBy) {
+                        msg.readBy = {};
+                    }
+                    
+                    // 如果有阅读者参数，标记已读（但不标记发送者）
+                    if (reader && reader !== msg.user) {
+                        msg.readBy[reader] = now;
+                    }
+                    
+                    // 检查是否需要删除：双方都已读且超过10秒
+                    const readByOthers = Object.keys(msg.readBy).filter(r => r !== msg.user);
+                    if (readByOthers.length > 0) {
+                        const otherReadTime = msg.readBy[readByOthers[0]];
+                        if (now - otherReadTime > 10000) {
+                            messagesToDelete.push(msg.id);
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+                
+                // 如果有消息要删除，同步到KV
+                if (messagesToDelete.length > 0) {
+                    try {
+                        await chatStore.put(CHAT_STORE_KEY, JSON.stringify(chatMessages));
+                    } catch (e) {
+                        console.log('KV delete sync failed:', e);
+                    }
                 }
                 
                 return new Response(
@@ -739,8 +784,8 @@ export default {
         
         async function fetchMessages() {
             try {
-                // 从服务器获取消息（不使用本地存储）
-                const response = await fetch('/api/chat/messages');
+                // 从服务器获取消息，传递阅读者参数
+                const response = await fetch('/api/chat/messages?reader=' + encodeURIComponent(username));
                 const data = await response.json();
                 if (data.success && data.messages) {
                     // 直接使用服务器返回的消息，不使用本地存储
@@ -751,8 +796,8 @@ export default {
                     
                     // 显示消息
                     const messagesContainer = document.getElementById('chatMessages');
-                    let html = '<div class="system-message">💕 欢迎来到520浪漫聊天室！</div>';
-                    html += '<div class="system-message">📌 消息10秒后自动消失~</div>';
+                    let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
+                    html += '<div class="system-message">📌 对方阅读后10秒消失，未阅读则一直保留~</div>';
                     messages.forEach(function(msg) {
                         const isMe = msg.user === username;
                         const messageClass = isMe ? 'message me' : 'message other';
