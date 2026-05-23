@@ -256,36 +256,49 @@ export default {
                     // 发送者立即标记为已读
                     newMessage.readBy[body.user] = now;
                     
-                    // 先从KV读取最新数据（防止内存数据丢失）
-                    let storedMessages = [];
-                    try {
-                        const stored = await chatStore.get(CHAT_STORE_KEY);
-                        if (stored) {
-                            storedMessages = JSON.parse(stored);
-                        }
-                    } catch (e) {
-                        console.log('KV get failed:', e);
-                    }
-                    
-                    storedMessages.push(newMessage);
-                    if (storedMessages.length > 100) {
-                        storedMessages = storedMessages.slice(-100);
-                    }
-                    
-                    // 增加重试机制确保KV写入成功
-                    const MAX_RETRIES = 10;
-                    const RETRY_DELAY = 1000; // 每次重试延迟1000ms
+                    // 增加重试机制确保KV写入成功（每次重试前重新读取最新数据以避免竞态条件）
+                    const MAX_RETRIES = 5;
                     let saved = false;
-                    for (let i = 0; i < MAX_RETRIES; i++) {
+                    let storedMessages = [];
+                    
+                    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                        // 每次重试前重新读取最新数据
+                        try {
+                            const stored = await chatStore.get(CHAT_STORE_KEY);
+                            if (stored) {
+                                storedMessages = JSON.parse(stored);
+                            } else {
+                                storedMessages = [];
+                            }
+                        } catch (e) {
+                            console.log('KV get failed on attempt', attempt + 1, ':', e);
+                        }
+                        
+                        // 检查消息是否已存在（防止重复添加）
+                        const messageExists = storedMessages.some(msg => msg.id === newMessage.id);
+                        if (messageExists) {
+                            console.log('Message already exists in KV, considering it saved');
+                            saved = true;
+                            break;
+                        }
+                        
+                        storedMessages.push(newMessage);
+                        if (storedMessages.length > 100) {
+                            storedMessages = storedMessages.slice(-100);
+                        }
+                        
                         const result = await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
                         if (result) {
                             saved = true;
-                            console.log('Message saved to KV on attempt', i + 1);
+                            console.log('Message saved to KV on attempt', attempt + 1);
                             break;
                         } else {
-                            console.log('KV put failed, attempt', i + 1);
-                            if (i < MAX_RETRIES - 1) {
-                                await new Promise(r => setTimeout(r, RETRY_DELAY * (i + 1)));
+                            console.log('KV put failed, attempt', attempt + 1);
+                            // 移除刚才添加的消息，以便下次重试
+                            storedMessages.pop();
+                            if (attempt < MAX_RETRIES - 1) {
+                                // 指数退避延迟
+                                await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
                             }
                         }
                     }
