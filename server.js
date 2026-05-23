@@ -211,20 +211,30 @@ export default {
                         storedMessages = storedMessages.slice(-100);
                     }
                     
-                    // 重试机制确保KV写入成功
-                    const MAX_RETRIES = 3;
+                    // 增加重试机制确保KV写入成功
+                    const MAX_RETRIES = 5;
+                    const RETRY_DELAY = 200; // 每次重试延迟200ms
                     let saved = false;
                     for (let i = 0; i < MAX_RETRIES; i++) {
                         try {
                             await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
                             saved = true;
+                            console.log('Message saved to KV on attempt', i + 1);
                             break;
                         } catch (e) {
                             console.log('KV put failed, attempt', i + 1, ':', e);
                             if (i < MAX_RETRIES - 1) {
-                                await new Promise(r => setTimeout(r, 100 * (i + 1)));
+                                await new Promise(r => setTimeout(r, RETRY_DELAY * (i + 1)));
                             }
                         }
+                    }
+                    
+                    // 如果保存失败，返回错误给客户端
+                    if (!saved) {
+                        return new Response(
+                            JSON.stringify({ success: false, error: 'Failed to save message to server', message: newMessage }),
+                            { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                        );
                     }
                     
                     return new Response(
@@ -232,6 +242,7 @@ export default {
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
                     );
                 } catch (e) {
+                    console.log('POST error:', e);
                     return new Response(
                         JSON.stringify({ success: false, error: 'Invalid request' }),
                         { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
@@ -856,6 +867,8 @@ export default {
             
             input.value = '';
             
+            let serverMessageId = null;
+            
             try {
                 const response = await fetch('/api/chat/messages', {
                     method: 'POST',
@@ -864,17 +877,44 @@ export default {
                 });
                 
                 const data = await response.json();
-                if (data.success) {
-                    // 服务器保存成功，更新为真实ID
-                    tempElement.setAttribute('data-id', data.message.id);
-                    // 延迟5秒后刷新列表，确保KV同步完成
-                    setTimeout(() => {
-                        fetchMessages();
-                    }, 5000);
+                if (data.success && data.message) {
+                    // 服务器保存成功，记录服务器ID
+                    serverMessageId = data.message.id;
+                    tempElement.setAttribute('data-id', serverMessageId);
                 }
             } catch (e) {
                 console.log('Send message failed:', e);
             }
+            
+            // 5秒后检查服务器是否有这条消息，如果没有则从本地清除
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/chat/messages?reader=' + encodeURIComponent(username));
+                    const data = await response.json();
+                    if (data.success && data.messages) {
+                        const serverIds = new Set(data.messages.map(m => m.id));
+                        // 如果是临时ID或者服务器没有这条消息，删除本地显示
+                        if (serverMessageId) {
+                            // 已经有服务器ID，检查服务器是否有
+                            if (!serverIds.has(serverMessageId)) {
+                                // 服务器没有，清除本地消息
+                                if (tempElement.parentNode) {
+                                    tempElement.parentNode.removeChild(tempElement);
+                                    console.log('Message not found on server, removed from local');
+                                }
+                            }
+                        } else {
+                            // 还是临时ID，说明POST失败，清除本地消息
+                            if (tempElement.parentNode) {
+                                tempElement.parentNode.removeChild(tempElement);
+                                console.log('Message send failed, removed from local');
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('Check message failed:', e);
+                }
+            }, 5000);
         }
         
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
