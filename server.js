@@ -18,10 +18,7 @@ const FEEDBACK_STORE_KEY = 'feedback_messages';
 const HEARTBEAT_TIMEOUT = 45000;
 
 class KVStorage {
-    static memoryFallback = {};
-    
     constructor(namespace, kvBinding = null) {
-        // 阿里云 ESA 使用 EDGEKV_NAMESPACE 环境变量
         this.namespace = namespace || process.env.EDGEKV_NAMESPACE || 'chat-store';
         this.kvBinding = kvBinding;
     }
@@ -58,12 +55,10 @@ class KVStorage {
                 });
                 const value = await Promise.race([this.kvBinding.get(key, { type: 'text' }), timeoutPromise]);
                 console.log('KV binding get success for key:', key, 'has value:', value ? 'yes' : 'no');
-                if (value) {
-                    KVStorage.memoryFallback[key] = value;
-                    return value;
-                }
+                return value;
             } catch (e) {
                 console.log('KV binding get error for key:', key, '-', e.message || e);
+                return null;
             }
         }
         
@@ -75,17 +70,15 @@ class KVStorage {
                 });
                 const value = await Promise.race([edgeKv.get(key, { type: 'text' }), timeoutPromise]);
                 console.log('KV get success for key:', key, 'has value:', value ? 'yes' : 'no');
-                if (value) {
-                    KVStorage.memoryFallback[key] = value;
-                    return value;
-                }
+                return value;
             } catch (e) {
                 console.log('KV get error for key:', key, '-', e.message || e);
+                return null;
             }
         }
-        const fallbackValue = KVStorage.memoryFallback[key];
-        console.log('Using memory fallback for key:', key, 'has value:', fallbackValue ? 'yes' : 'no');
-        return fallbackValue || null;
+        
+        console.log('KV not available for namespace:', this.namespace);
+        return null;
     }
     
     async put(key, value) {
@@ -97,8 +90,6 @@ class KVStorage {
             console.log('KV put error: value is null/undefined for key:', key);
             return false;
         }
-        
-        KVStorage.memoryFallback[key] = value;
         
         if (this.kvBinding) {
             try {
@@ -128,7 +119,7 @@ class KVStorage {
                 return false;
             }
         } else {
-            console.log('KV not available for namespace:', this.namespace, '- memory only (not persistent)');
+            console.log('KV not available for namespace:', this.namespace);
             return false;
         }
     }
