@@ -217,7 +217,7 @@ export default {
                     
                     // 增加重试机制确保KV写入成功
                     const MAX_RETRIES = 5;
-                    const RETRY_DELAY = 300; // 每次重试延迟300ms
+                    const RETRY_DELAY = 1000; // 每次重试延迟1000ms
                     let saved = false;
                     for (let i = 0; i < MAX_RETRIES; i++) {
                         const result = await chatStore.put(CHAT_STORE_KEY, JSON.stringify(storedMessages));
