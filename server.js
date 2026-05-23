@@ -244,8 +244,10 @@ export default {
                 try {
                     const body = await req.json();
                     const now = Date.now();
+                    const clientId = body.clientId || generateId(); // 使用客户端提供的 clientId 或生成新 ID
                     const newMessage = {
                         id: generateId(),
+                        clientId: clientId, // 客户端唯一标识，用于去重
                         user: body.user || '匿名用户',
                         content: body.content,
                         time: getCurrentTime(),
@@ -274,10 +276,10 @@ export default {
                             console.log('KV get failed on attempt', attempt + 1, ':', e);
                         }
                         
-                        // 检查消息是否已存在（防止重复添加）
-                        const messageExists = storedMessages.some(msg => msg.id === newMessage.id);
-                        if (messageExists) {
-                            console.log('Message already exists in KV, considering it saved');
+                        // 检查消息是否已存在（通过 clientId 防止重复添加）
+                        const existingMsg = storedMessages.find(msg => msg.clientId === clientId);
+                        if (existingMsg) {
+                            console.log('Message with same clientId already exists, skipping duplicate');
                             saved = true;
                             break;
                         }
@@ -977,6 +979,7 @@ export default {
             const messagesContainer = document.getElementById('chatMessages');
             const messageClass = 'message me';
             const tempId = 'temp_' + Date.now();
+            const clientId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9); // 生成唯一客户端ID
             const tempElement = document.createElement('div');
             tempElement.className = messageClass;
             tempElement.setAttribute('data-id', tempId);
@@ -998,7 +1001,7 @@ export default {
                     fetch('/api/chat/messages', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user: username, content: encryptedContent })
+                        body: JSON.stringify({ user: username, content: encryptedContent, clientId: clientId })
                     }),
                     timeoutPromise
                 ]);
@@ -1048,7 +1051,7 @@ export default {
                 fetch('/api/chat/messages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user: username, content: encryptedContent })
+                    body: JSON.stringify({ user: username, content: encryptedContent, clientId: clientId })
                 })
                 .then(res => res.json())
                 .then(data => {
