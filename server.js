@@ -716,67 +716,68 @@ export default {
             font-style: italic; padding: 10px;
         }
         .chat-input {
-            display: flex; gap: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         .chat-input input {
-            flex: 1; padding: 15px 25px;
-            border: none; border-radius: 30px;
-            background: rgba(255, 240, 245, 0.8);
-            font-size: 1rem; outline: none;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .chat-input button {
-            padding: 15px 30px; background: linear-gradient(135deg, #ff6b9d, #ff8fab);
-            color: white; border: none; border-radius: 30px;
-            font-size: 1rem; font-weight: bold;
-            cursor: pointer; transition: all 0.3s;
-            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
-        }
-        .chat-input button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.5);
-        }
-        .share-buttons {
-            display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;
-        }
-        .share-btn {
-            flex: 1; min-width: 100px;
-            padding: 10px 15px; background: rgba(255, 107, 157, 0.1);
-            color: #ff6b9d; border: 2px solid #ffc8dd;
-            border-radius: 20px; font-size: 0.9rem;
-            cursor: pointer; transition: all 0.3s;
-        }
-        .share-btn:hover {
-            background: #ff6b9d; color: white;
-            transform: translateY(-2px);
-        }
-        .footer { text-align: center; margin-top: 50px; color: rgba(255,255,255,0.9); }
-        .back-btn {
-            display: inline-block; margin-top: 30px;
-            padding: 12px 40px; background: rgba(255,255,255,0.9);
-            color: #ff6b9d; border-radius: 30px; text-decoration: none;
-            font-weight: bold; transition: all 0.3s;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
-        
-        /* 表情面板样式 */
-        .emoji-btn {
-            padding: 15px;
-            background: rgba(255, 240, 245, 0.8);
+            flex: 1;
+            padding: 18px 25px;
             border: none;
             border-radius: 30px;
-            font-size: 1.2rem;
+            background: rgba(255, 240, 245, 0.6);
+            font-size: 1.1rem;
+            outline: none;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        .chat-input input:focus {
+            background: rgba(255, 240, 245, 0.9);
+            box-shadow: inset 0 2px 10px rgba(255, 107, 157, 0.1);
+        }
+        .chat-input input::placeholder {
+            color: rgba(255, 107, 157, 0.5);
+        }
+        .emoji-btn {
+            padding: 16px;
+            background: rgba(255, 240, 245, 0.6);
+            border: none;
+            border-radius: 50%;
+            font-size: 1.4rem;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
         }
         .emoji-btn:hover {
-            background: rgba(255, 192, 203, 0.9);
+            background: rgba(255, 192, 203, 0.8);
             transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 192, 203, 0.5);
+        }
+        .chat-input button {
+            padding: 16px 35px;
+            background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+            flex-shrink: 0;
+        }
+        .chat-input button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5);
+            background: linear-gradient(135deg, #ff7ba2, #ffa0b8);
         }
         .emoji-panel {
             position: absolute;
