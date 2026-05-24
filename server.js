@@ -777,7 +777,7 @@ export default {
                 <span class="online-count" id="onlineCount">💕 共 0 条消息</span>
             </div>
             <div class="chat-messages" id="chatMessages">
-                <div class="system-message">💕 欢迎来到520浪漫聊天室！</div>
+                <div class="system-message">💕 欢迎来到浪漫聊天室！</div>
             </div>
             <div class="chat-input">
                 <input type="text" id="chatInput" placeholder="输入你的心声..." />
