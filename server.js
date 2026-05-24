@@ -759,6 +759,66 @@ export default {
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
         .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+        
+        /* 表情面板样式 */
+        .emoji-btn {
+            padding: 15px;
+            background: rgba(255, 240, 245, 0.8);
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .emoji-btn:hover {
+            background: rgba(255, 192, 203, 0.9);
+            transform: scale(1.1);
+        }
+        .emoji-panel {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 100;
+            width: 280px;
+        }
+        .emoji-panel.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .emoji-item {
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .emoji-item:hover {
+            background: rgba(255, 107, 157, 0.1);
+            transform: scale(1.2);
+        }
+        .chat-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -781,7 +841,13 @@ export default {
                 <div class="system-message">💕 欢迎来到浪漫聊天室！</div>
             </div>
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                    <div class="emoji-panel" id="emojiPanel">
+                        <div class="emoji-grid" id="emojiGrid"></div>
+                    </div>
+                </div>
+                <button class="emoji-btn" id="emojiBtn">😊</button>
                 <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
             </div>
         </div>
@@ -855,9 +921,74 @@ export default {
             localStorage.setItem('lqUserId', userId);
         }
         
+        // 浪漫主题表情列表
+        const romanticEmojis = [
+            '💕', '💖', '💗', '💓', '💘', '💝', '💞',
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎',
+            '🖤', '🤍', '❤️‍🔥', '❤️‍🩹', '🌹', '🥀', '🌺',
+            '🌸', '🌼', '🌻', '🌷', '💐', '🫶', '🙈',
+            '😍', '🥰', '😘', '😗', '😙', '😚', '😊',
+            '😇', '🤗', '😌', '😏', '🥲', '😎', '🥳',
+            '🎉', '🎊', '🎁', '🎀', '🎈', '💌', '💫',
+            '✨', '💫', '⭐', '🌟', '💥', '💦', '💨',
+            '🔥', '🌈', '☀️', '🌙', '⭐', '✨', '🌟',
+            '🌠', '🌌', '💎', '💍', '🥂', '🍾', '🍷'
+        ];
+        
+        // 初始化表情面板
+        function initEmojiPanel() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            const emojiBtn = document.getElementById('emojiBtn');
+            const emojiPanel = document.getElementById('emojiPanel');
+            const chatInput = document.getElementById('chatInput');
+            
+            // 渲染表情
+            romanticEmojis.forEach(emoji => {
+                const emojiItem = document.createElement('div');
+                emojiItem.className = 'emoji-item';
+                emojiItem.textContent = emoji;
+                emojiItem.onclick = () => insertEmoji(emoji);
+                emojiGrid.appendChild(emojiItem);
+            });
+            
+            // 切换表情面板显示
+            emojiBtn.onclick = (e) => {
+                e.stopPropagation();
+                emojiPanel.classList.toggle('show');
+            };
+            
+            // 点击其他地方关闭面板
+            document.addEventListener('click', (e) => {
+                if (!emojiPanel.contains(e.target) && e.target !== emojiBtn) {
+                    emojiPanel.classList.remove('show');
+                }
+            });
+        }
+        
+        // 插入表情到输入框光标位置
+        function insertEmoji(emoji) {
+            const chatInput = document.getElementById('chatInput');
+            const startPos = chatInput.selectionStart;
+            const endPos = chatInput.selectionEnd;
+            
+            const textBefore = chatInput.value.substring(0, startPos);
+            const textAfter = chatInput.value.substring(endPos);
+            
+            chatInput.value = textBefore + emoji + textAfter;
+            chatInput.focus();
+            
+            // 移动光标到插入位置之后
+            const newCursorPos = startPos + emoji.length;
+            chatInput.setSelectionRange(newCursorPos, newCursorPos);
+            
+            // 关闭表情面板
+            document.getElementById('emojiPanel').classList.remove('show');
+        }
+        
         // 页面加载时自动获取消息
         loadMessages();
         fetchMessages();
+        initEmojiPanel();
         
         const container = document.getElementById('particles');
         for(let i=0; i<30; i++) {
