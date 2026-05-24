@@ -917,82 +917,82 @@ export default {
                     
                     const messagesContainer = document.getElementById('chatMessages');
                     
-                    // 获取当前显示的消息ID和临时ID
-                    const currentDisplayedIds = new Set();
-                    const tempIds = [];
-                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
-                        const id = el.getAttribute('data-id');
-                        if (id && id.startsWith('temp_')) {
-                            tempIds.push(id);
-                        } else if (id) {
-                            currentDisplayedIds.add(id);
+                    // 检查是否有正在发送中的消息（避免在发送过程中重复添加）
+                    const pendingMessages = new Map(); // content -> element
+                    messagesContainer.querySelectorAll('.message[data-id^="temp_"]').forEach(el => {
+                        const content = el.querySelector('.message-content');
+                        if (content) {
+                            pendingMessages.set(content.textContent, el);
                         }
                     });
                     
-                    // 构建已处理的消息ID集合（包括服务器ID和临时ID对应的真实ID）
-                    const processedIds = new Set(currentDisplayedIds);
-                    
                     // 只添加新消息，不重新构建整个HTML
                     serverMessages.forEach(function(msg) {
-                        // 如果这条消息已经在显示中（通过服务器ID），跳过
-                        if (processedIds.has(msg.id)) {
+                        const decryptedContent = decrypt(msg.content);
+                        
+                        // 如果有正在发送中的相同内容消息，跳过（让发送流程处理更新）
+                        // 或者直接更新那个临时消息的ID
+                        for (const [content, el] of pendingMessages) {
+                            if (content === decryptedContent) {
+                                // 更新临时消息为服务器消息
+                                el.setAttribute('data-id', msg.id);
+                                
+                                // 更新消息状态
+                                const statusSpan = el.querySelector('.message-status');
+                                if (statusSpan && msg.user === username) {
+                                    const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                                    if (otherReaders.length > 0) {
+                                        statusSpan.className = 'message-status read';
+                                        statusSpan.textContent = '对方已读';
+                                    } else {
+                                        statusSpan.className = 'message-status unread';
+                                        statusSpan.textContent = '对方未读';
+                                    }
+                                }
+                                return; // 不再添加新元素
+                            }
+                        }
+                        
+                        // 检查这条消息是否已经显示（通过data-id）
+                        const existingEl = messagesContainer.querySelector('[data-id="' + msg.id + '"]');
+                        if (existingEl) {
+                            // 消息已存在，更新状态
+                            if (msg.user === username) {
+                                const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                                const statusEl = existingEl.querySelector('.message-status');
+                                if (statusEl) {
+                                    if (otherReaders.length > 0) {
+                                        statusEl.className = 'message-status read';
+                                        statusEl.textContent = '对方已读';
+                                    } else {
+                                        statusEl.className = 'message-status unread';
+                                        statusEl.textContent = '对方未读';
+                                    }
+                                }
+                            }
                             return;
                         }
                         
-                        // 检查是否已有临时消息正在发送中（通过内容匹配）
-                        let matched = false;
-                        for (const tempId of tempIds) {
-                            const existingEl = messagesContainer.querySelector('[data-id="' + tempId + '"]');
-                            if (existingEl) {
-                                const existingContent = existingEl.querySelector('.message-content');
-                                const newContent = decrypt(msg.content);
-                                if (existingContent && existingContent.textContent === newContent) {
-                                    // 匹配成功，更新临时消息为服务器消息
-                                    existingEl.setAttribute('data-id', msg.id);
-                                    processedIds.add(msg.id);
-                                    
-                                    // 更新消息状态
-                                    const statusSpan = existingEl.querySelector('.message-status');
-                                    if (statusSpan && msg.user === username) {
-                                        const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
-                                        if (otherReaders.length > 0) {
-                                            statusSpan.className = 'message-status read';
-                                            statusSpan.textContent = '对方已读';
-                                        } else {
-                                            statusSpan.className = 'message-status unread';
-                                            statusSpan.textContent = '对方未读';
-                                        }
-                                    }
-                                    matched = true;
-                                    break;
-                                }
+                        const isMe = msg.user === username;
+                        const messageClass = isMe ? 'message me' : 'message other';
+                        
+                        // 计算消息状态
+                        let statusHtml = '';
+                        if (isMe) {
+                            const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                            if (otherReaders.length > 0) {
+                                statusHtml = '<span class="message-status read">对方已读</span>';
+                            } else {
+                                statusHtml = '<span class="message-status unread">对方未读</span>';
                             }
                         }
                         
-                        // 如果没有匹配到临时消息，作为新消息添加
-                        if (!matched) {
-                            const isMe = msg.user === username;
-                            const messageClass = isMe ? 'message me' : 'message other';
-                            const decryptedContent = decrypt(msg.content);
-                            
-                            // 计算消息状态
-                            let statusHtml = '';
-                            if (isMe) {
-                                const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
-                                if (otherReaders.length > 0) {
-                                    statusHtml = '<span class="message-status read">对方已读</span>';
-                                } else {
-                                    statusHtml = '<span class="message-status unread">对方未读</span>';
-                                }
-                            }
-                            
-                            // 创建新消息元素并添加到容器
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = messageClass;
-                            msgDiv.setAttribute('data-id', msg.id);
-                            msgDiv.innerHTML = '<div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div>';
-                            messagesContainer.appendChild(msgDiv);
-                        }
+                        // 创建新消息元素并添加到容器
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = messageClass;
+                        msgDiv.setAttribute('data-id', msg.id);
+                        msgDiv.innerHTML = '<div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div>';
+                        messagesContainer.appendChild(msgDiv);
                     });
                     
                     // 滚动到底部
