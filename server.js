@@ -136,7 +136,7 @@ class KVStorage {
 
 export default {
     async fetch(req, env) {
-        const { url, method } = req;
+        const { url, method, headers } = req;
         
         // 阿里云 ESA: 使用 EDGEKV_NAMESPACE 环境变量，不依赖 env 绑定
         const kvNamespace = env.EDGEKV_NAMESPACE || 'chat-store';
