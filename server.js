@@ -1132,6 +1132,7 @@ export default {
         fetchOnlineCount();
         setInterval(sendHeartbeat, 30000);
         setInterval(fetchMessages, 5000); // 5秒刷新一次
+        setInterval(fetchOnlineCount, 5000); // 5秒刷新一次在线人数
         document.getElementById('chatInput').addEventListener('keyup', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
