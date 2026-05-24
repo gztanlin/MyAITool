@@ -718,14 +718,14 @@ export default {
         .chat-input {
             display: flex;
             align-items: flex-end;
-            gap: 10px;
-            padding: 10px 12px;
+            gap: 8px;
+            padding: 8px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         .chat-input textarea {
-            flex: 1;
+            flex: 2;
             padding: 14px 20px;
             border: none;
             border-radius: 20px;
@@ -736,7 +736,7 @@ export default {
             transition: all 0.3s;
             resize: none;
             min-height: 48px;
-            max-height: 100px;
+            max-height: 120px;
             line-height: 1.5;
             font-family: inherit;
         }
@@ -748,25 +748,25 @@ export default {
             color: rgba(255, 107, 157, 0.5);
         }
         .emoji-btn {
-            padding: 12px;
-            background: rgba(255, 240, 245, 0.6);
+            padding: 8px;
+            background: transparent;
             border: none;
             border-radius: 50%;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
             flex-shrink: 0;
-            width: 42px;
-            height: 42px;
+            width: 34px;
+            height: 34px;
+            opacity: 0.7;
         }
         .emoji-btn:hover {
-            background: rgba(255, 192, 203, 0.8);
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(255, 192, 203, 0.5);
+            background: rgba(255, 192, 203, 0.5);
+            transform: scale(1.1);
+            opacity: 1;
         }
         .chat-input button {
             padding: 12px 25px;
@@ -861,10 +861,12 @@ export default {
                 max-height: 80px;
             }
             .emoji-btn {
-                width: 38px;
-                height: 38px;
-                padding: 10px;
-                font-size: 1rem;
+                width: 30px;
+                height: 30px;
+                padding: 6px;
+                font-size: 0.9rem;
+                background: transparent;
+                box-shadow: none;
             }
             .chat-input button {
                 padding: 10px 20px;
