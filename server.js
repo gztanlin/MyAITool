@@ -944,6 +944,34 @@ export default {
                             return;
                         }
                         
+                        // 检查是否已有临时消息正在发送中（通过检查是否有 temp_xxx 的ID对应相同内容）
+                        const tempIds = Array.from(currentDisplayedIds).filter(id => id.startsWith('temp_'));
+                        for (const tempId of tempIds) {
+                            const existingEl = messagesContainer.querySelector('[data-id="' + tempId + '"]');
+                            if (existingEl) {
+                                const existingContent = existingEl.querySelector('.message-content');
+                                const newContent = decrypt(msg.content);
+                                if (existingContent && existingContent.textContent === newContent) {
+                                    // 这是同一条消息，只是还没收到服务器响应
+                                    // 将临时ID更新为服务器ID
+                                    existingEl.setAttribute('data-id', msg.id);
+                                    // 更新消息状态
+                                    const statusSpan = existingEl.querySelector('.message-status');
+                                    if (statusSpan && msg.user === username) {
+                                        const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                                        if (otherReaders.length > 0) {
+                                            statusSpan.className = 'message-status read';
+                                            statusSpan.textContent = '对方已读';
+                                        } else {
+                                            statusSpan.className = 'message-status unread';
+                                            statusSpan.textContent = '对方未读';
+                                        }
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                        
                         const isMe = msg.user === username;
                         const messageClass = isMe ? 'message me' : 'message other';
                         const decryptedContent = decrypt(msg.content);
