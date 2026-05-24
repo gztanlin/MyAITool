@@ -917,12 +917,24 @@ export default {
                     
                     const messagesContainer = document.getElementById('chatMessages');
                     
-                    // 检查是否有正在发送中的消息（避免在发送过程中重复添加）
-                    const pendingMessages = new Map(); // content -> element
-                    messagesContainer.querySelectorAll('.message[data-id^="temp_"]').forEach(el => {
-                        const content = el.querySelector('.message-content');
-                        if (content) {
-                            pendingMessages.set(content.textContent, el);
+                    // 获取所有消息元素
+                    const allMessageEls = {};
+                    messagesContainer.querySelectorAll('.message[data-id]').forEach(el => {
+                        const id = el.getAttribute('data-id');
+                        if (id) {
+                            allMessageEls[id] = el;
+                        }
+                    });
+                    
+                    // 收集正在发送中的临时消息
+                    const pendingMessages = {}; // content -> element
+                    Object.values(allMessageEls).forEach(el => {
+                        const id = el.getAttribute('data-id');
+                        if (id && id.startsWith('temp_')) {
+                            const content = el.querySelector('.message-content');
+                            if (content) {
+                                pendingMessages[content.textContent] = el;
+                            }
                         }
                     });
                     
@@ -930,33 +942,32 @@ export default {
                     serverMessages.forEach(function(msg) {
                         const decryptedContent = decrypt(msg.content);
                         
-                        // 如果有正在发送中的相同内容消息，跳过（让发送流程处理更新）
-                        // 或者直接更新那个临时消息的ID
-                        for (const [content, el] of pendingMessages) {
-                            if (content === decryptedContent) {
-                                // 更新临时消息为服务器消息
-                                el.setAttribute('data-id', msg.id);
-                                
-                                // 更新消息状态
-                                const statusSpan = el.querySelector('.message-status');
-                                if (statusSpan && msg.user === username) {
-                                    const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
-                                    if (otherReaders.length > 0) {
-                                        statusSpan.className = 'message-status read';
-                                        statusSpan.textContent = '对方已读';
-                                    } else {
-                                        statusSpan.className = 'message-status unread';
-                                        statusSpan.textContent = '对方未读';
-                                    }
+                        // 如果有正在发送中的相同内容消息，更新那个临时消息
+                        if (pendingMessages[decryptedContent]) {
+                            const el = pendingMessages[decryptedContent];
+                            // 更新临时消息为服务器消息
+                            el.setAttribute('data-id', msg.id);
+                            
+                            // 更新消息状态
+                            const statusSpan = el.querySelector('.message-status');
+                            if (statusSpan && msg.user === username) {
+                                const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
+                                if (otherReaders.length > 0) {
+                                    statusSpan.className = 'message-status read';
+                                    statusSpan.textContent = '对方已读';
+                                } else {
+                                    statusSpan.className = 'message-status unread';
+                                    statusSpan.textContent = '对方未读';
                                 }
-                                return; // 不再添加新元素
                             }
+                            // 标记为已处理
+                            delete pendingMessages[decryptedContent];
+                            return;
                         }
                         
-                        // 检查这条消息是否已经显示（通过data-id）
-                        const existingEl = messagesContainer.querySelector('[data-id="' + msg.id + '"]');
+                        // 如果消息已经显示（通过服务器ID），更新状态
+                        const existingEl = allMessageEls[msg.id];
                         if (existingEl) {
-                            // 消息已存在，更新状态
                             if (msg.user === username) {
                                 const otherReaders = Object.keys(msg.readBy || {}).filter(r => r !== username);
                                 const statusEl = existingEl.querySelector('.message-status');
