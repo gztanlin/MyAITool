@@ -1,12 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static('public'));
 
 let feedbackMessages = [];
@@ -15,9 +17,13 @@ let feedbackMessages = [];
 app.get('/lq', (req, res) => {
     const password = req.query.pass;
     const correctPassword = 'lqq';
+    const username = req.query.name;
     
-    // 如果密码不正确，显示密码输入页面
-    if (password !== correctPassword) {
+    // 检查是否有登录标记cookie
+    const hasLoginCookie = req.cookies?.lq_login === '1';
+    
+    // 如果密码不正确或没有用户名，显示密码输入页面
+    if (password !== correctPassword || !username) {
         const loginHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -70,7 +76,18 @@ app.get('/lq', (req, res) => {
             margin-bottom: 30px;
         }
         
-        .password-input {
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #e91e63;
+            font-size: 1.1rem;
+        }
+        
+        .form-input {
             width: 100%;
             padding: 15px 20px;
             font-size: 1.2rem;
@@ -81,7 +98,7 @@ app.get('/lq', (req, res) => {
             transition: all 0.3s;
         }
         
-        .password-input:focus {
+        .form-input:focus {
             border-color: #e91e63;
             box-shadow: 0 0 20px rgba(233,30,99,0.3);
         }
@@ -129,7 +146,16 @@ app.get('/lq', (req, res) => {
         <h1 class="title">💕 请输入密码</h1>
         <p class="subtitle">这是一个专属的浪漫页面</p>
         
-        <input type="password" id="password" class="password-input" placeholder="请输入密码" />
+        <div class="form-group">
+            <label>你是谁？</label>
+            <select class="form-input" id="username">
+                <option value="">请选择</option>
+                <option value="LONG">LONG</option>
+                <option value="TAN">TAN</option>
+            </select>
+        </div>
+        
+        <input type="password" id="password" class="form-input" placeholder="请输入密码" />
         <button class="submit-btn" onclick="checkPassword()">解锁浪漫 💝</button>
         
         <div class="error-message" id="error">密码错误，请重试</div>
@@ -138,10 +164,18 @@ app.get('/lq', (req, res) => {
     <script>
         function checkPassword() {
             const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
             const error = document.getElementById('error');
             
+            if (!username) {
+                alert('请选择你的名字！');
+                return;
+            }
+            
             if (password === 'lqq') {
-                window.location.href = '/lq?pass=lqq';
+                // 设置登录标记cookie
+                document.cookie = 'lq_login=1; path=/; max-age=3600';
+                window.location.href = '/lq?pass=lqq&name=' + encodeURIComponent(username);
             } else {
                 error.classList.add('show');
                 setTimeout(() => error.classList.remove('show'), 3000);
@@ -153,10 +187,74 @@ app.get('/lq', (req, res) => {
                 checkPassword();
             }
         });
+        
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
     </script>
 </body>
 </html>`;
         res.send(loginHtml);
+        return;
+    }
+    
+    // 验证必须从登录页面进入（检查cookie）
+    if (!hasLoginCookie) {
+        const blockHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 请从登录页面进入</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            font-family: Georgia, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        .icon { font-size: 4rem; margin-bottom: 20px; }
+        .title { font-size: 1.8rem; color: #ff6b9d; margin-bottom: 20px; }
+        .desc { color: #666; margin-bottom: 30px; }
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1 class="title">💕 请从登录页面进入</h1>
+        <p class="desc">为了保证你的安全，请返回登录页面，输入密码后进入。</p>
+        <a href="/lq" class="btn">返回登录</a>
+    </div>
+</body>
+</html>`;
+        res.send(blockHtml);
         return;
     }
     

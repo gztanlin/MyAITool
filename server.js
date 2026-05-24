@@ -406,8 +406,12 @@ export default {
             const urlObj = new URL(url, 'http://localhost');
             const password = urlObj.searchParams.get('pass');
             const correctPassword = 'lqq';
+            const username = urlObj.searchParams.get('name');
             
-            if (password !== correctPassword) {
+            // 检查是否有登录标记cookie
+            const hasLoginCookie = headers.get('Cookie')?.includes('lq_login=1');
+            
+            if (password !== correctPassword || !username) {
                 return new Response(
                     `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -514,6 +518,8 @@ export default {
                 alert('密码错误，请重新输入！');
                 return;
             }
+            // 设置登录标记cookie
+            document.cookie = 'lq_login=1; path=/; max-age=3600';
             window.location.href = '/lq?pass=' + encodeURIComponent(password) + '&name=' + encodeURIComponent(username);
         }
         document.getElementById('password').addEventListener('keyup', function(e) {
@@ -523,6 +529,65 @@ export default {
             if (e.key === 'Enter') submitPassword();
         });
     </script>
+</body>
+</html>`,
+                    { headers: { 'Content-Type': 'text/html' } }
+                );
+            }
+            
+            // 验证必须从登录页面进入（检查cookie）
+            if (!hasLoginCookie) {
+                return new Response(
+                    `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 请从登录页面进入</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            font-family: Georgia, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        .icon { font-size: 4rem; margin-bottom: 20px; }
+        .title { font-size: 1.8rem; color: #ff6b9d; margin-bottom: 20px; }
+        .desc { color: #666; margin-bottom: 30px; }
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1 class="title">💕 请从登录页面进入</h1>
+        <p class="desc">为了保证你的安全，请返回登录页面，输入密码后进入。</p>
+        <a href="/lq" class="btn">返回登录</a>
+    </div>
 </body>
 </html>`,
                     { headers: { 'Content-Type': 'text/html' } }
