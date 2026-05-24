@@ -717,37 +717,42 @@ export default {
         }
         .chat-input {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 15px;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 10px 12px;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 40px;
+            border-radius: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
-        .chat-input input {
+        .chat-input textarea {
             flex: 1;
-            padding: 18px 25px;
+            padding: 14px 20px;
             border: none;
-            border-radius: 30px;
+            border-radius: 20px;
             background: rgba(255, 240, 245, 0.6);
-            font-size: 1.1rem;
+            font-size: 1rem;
             outline: none;
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
             transition: all 0.3s;
+            resize: none;
+            min-height: 48px;
+            max-height: 100px;
+            line-height: 1.5;
+            font-family: inherit;
         }
-        .chat-input input:focus {
+        .chat-input textarea:focus {
             background: rgba(255, 240, 245, 0.9);
             box-shadow: inset 0 2px 10px rgba(255, 107, 157, 0.1);
         }
-        .chat-input input::placeholder {
+        .chat-input textarea::placeholder {
             color: rgba(255, 107, 157, 0.5);
         }
         .emoji-btn {
-            padding: 16px;
+            padding: 12px;
             background: rgba(255, 240, 245, 0.6);
             border: none;
             border-radius: 50%;
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
@@ -755,24 +760,27 @@ export default {
             justify-content: center;
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
             flex-shrink: 0;
+            width: 42px;
+            height: 42px;
         }
         .emoji-btn:hover {
             background: rgba(255, 192, 203, 0.8);
-            transform: scale(1.1);
+            transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(255, 192, 203, 0.5);
         }
         .chat-input button {
-            padding: 16px 35px;
+            padding: 12px 25px;
             background: linear-gradient(135deg, #ff6b9d, #ff8fab);
             color: white;
             border: none;
-            border-radius: 30px;
-            font-size: 1.1rem;
+            border-radius: 20px;
+            font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
             flex-shrink: 0;
+            min-width: 70px;
         }
         .chat-input button:hover {
             transform: translateY(-2px);
@@ -820,6 +828,62 @@ export default {
             position: relative;
             flex: 1;
         }
+        
+        /* 响应式布局 */
+        @media (max-width: 600px) {
+            .chat-container {
+                padding: 15px;
+                border-radius: 20px;
+            }
+            .chat-header {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+            .chat-header h3 {
+                font-size: 1rem;
+            }
+            .online-count {
+                font-size: 0.8rem;
+            }
+            .chat-messages {
+                min-height: 300px;
+                max-height: 400px;
+            }
+            .chat-input {
+                gap: 8px;
+                padding: 8px 10px;
+                border-radius: 20px;
+            }
+            .chat-input textarea {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+                min-height: 42px;
+                max-height: 80px;
+            }
+            .emoji-btn {
+                width: 38px;
+                height: 38px;
+                padding: 10px;
+                font-size: 1rem;
+            }
+            .chat-input button {
+                padding: 10px 20px;
+                font-size: 0.85rem;
+                min-width: 60px;
+            }
+            .emoji-panel {
+                width: 250px;
+                bottom: 65px;
+            }
+            .emoji-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 6px;
+            }
+            .emoji-item {
+                font-size: 1.3rem;
+                padding: 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -843,7 +907,7 @@ export default {
             </div>
             <div class="chat-input">
                 <div class="chat-input-wrapper">
-                    <input type="text" id="chatInput" placeholder="输入你的心声..." />
+                    <textarea id="chatInput" placeholder="输入你的心声..." rows="1"></textarea>
                     <div class="emoji-panel" id="emojiPanel">
                         <div class="emoji-grid" id="emojiGrid"></div>
                     </div>
