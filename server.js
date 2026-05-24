@@ -15,7 +15,8 @@ function getCurrentTime() {
 const CHAT_STORE_KEY = 'lq_chat_messages';
 const ONLINE_STORE_KEY = 'lq_chat_online';
 const FEEDBACK_STORE_KEY = 'feedback_messages';
-const HEARTBEAT_TIMEOUT = 45000;
+const HEARTBEAT_INTERVAL = 20000; // 20秒心跳一次
+const HEARTBEAT_TIMEOUT = 60000; // 60秒超时
 
 class KVStorage {
     constructor(namespace, kvBinding = null) {
@@ -1141,7 +1142,7 @@ export default {
         // 启动聊天功能
         sendHeartbeat();
         fetchOnlineCount();
-        setInterval(sendHeartbeat, 30000);
+        setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
         setInterval(fetchMessages, 5000); // 5秒刷新一次
         setInterval(fetchOnlineCount, 5000); // 5秒刷新一次在线人数
         document.getElementById('chatInput').addEventListener('keyup', function(e) {
