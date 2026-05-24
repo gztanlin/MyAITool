@@ -923,12 +923,23 @@ export default {
                         currentDisplayedIds.add(el.getAttribute('data-id'));
                     });
                     
-                    // 构建新的消息HTML
-                    let html = '<div class="system-message">💕 欢迎来到我们的专属聊天室！</div>';
+                    // 检查是否有新消息
+                    let hasNewMessages = false;
+                    for (const msg of serverMessages) {
+                        if (!currentDisplayedIds.has(msg.id)) {
+                            hasNewMessages = true;
+                            break;
+                        }
+                    }
                     
-                    // 添加服务器消息（去重：只在ID之前未显示时才添加）
+                    // 如果没有新消息，直接返回，不刷新界面
+                    if (!hasNewMessages && currentDisplayedIds.size === serverMessages.length) {
+                        return;
+                    }
+                    
+                    // 只添加新消息，不重新构建整个HTML
                     serverMessages.forEach(function(msg) {
-                        // 如果这条消息已经在显示中，跳过（避免重复添加）
+                        // 如果这条消息已经在显示中，跳过
                         if (currentDisplayedIds.has(msg.id)) {
                             return;
                         }
@@ -948,10 +959,15 @@ export default {
                             }
                         }
                         
-                        html += '<div class="' + messageClass + '" data-id="' + msg.id + '"><div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div></div>';
+                        // 创建新消息元素并添加到容器
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = messageClass;
+                        msgDiv.setAttribute('data-id', msg.id);
+                        msgDiv.innerHTML = '<div class="message-user">' + msg.user + '</div><div class="message-content">' + decryptedContent + '</div><div class="message-time">' + msg.time + statusHtml + '</div>';
+                        messagesContainer.appendChild(msgDiv);
                     });
                     
-                    messagesContainer.innerHTML = html;
+                    // 滚动到底部
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
             } catch (e) {
