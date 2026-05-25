@@ -919,45 +919,46 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 8px;
+            padding: 6px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 260px;
+            width: 280px;
             min-height: 180px;
+            overflow: hidden;
         }
         .emoji-panel.show {
             display: flex;
-            gap: 6px;
+            gap: 4px;
         }
         .emoji-category-bar {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            padding-right: 3px;
+            padding-right: 2px;
             border-right: 1px solid #ffe4ec;
-            min-width: 18px;
+            width: 16px;
             flex-shrink: 0;
         }
         .emoji-panel-content {
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
         .category-btn {
             padding: 0;
             background: transparent;
             border: none;
-            border-radius: 3px;
-            font-size: 0.7rem;
+            border-radius: 2px;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
-            flex: none;
             text-align: center;
-            min-width: 16px;
-            height: 20px;
-            line-height: 20px;
+            width: 16px;
+            height: 18px;
+            line-height: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -975,9 +976,11 @@ export default {
         }
         .emoji-grid {
             display: grid;
-            grid-template-columns: repeat(5, 40px);
+            grid-template-columns: repeat(5, 1fr);
             gap: 4px;
             padding: 4px;
+            width: 100%;
+            max-width: 220px;
         }
         .emoji-item {
             font-size: 1.4rem;
@@ -987,6 +990,10 @@ export default {
             border-radius: 8px;
             transition: all 0.2s;
             background: transparent;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .emoji-item:hover {
             background: rgba(255, 107, 157, 0.1);
