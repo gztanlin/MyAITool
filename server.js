@@ -691,8 +691,11 @@ export default {
         }
         .chat-container {
             background: rgba(255,255,255,0.95); border-radius: 30px;
-            padding: 30px; margin-top: 30px;
+            padding: 30px 30px 0; margin-top: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         .chat-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -724,9 +727,11 @@ export default {
             opacity: 0.6; cursor: not-allowed;
         }
         .chat-messages {
-            height: 450px; overflow-y: auto;
+            flex: 1;
+            overflow-y: auto;
             padding: 15px; background: rgba(255, 240, 245, 0.5);
-            border-radius: 20px; margin-bottom: 20px;
+            border-radius: 20px;
+            min-height: 450px;
         }
         .chat-messages::-webkit-scrollbar {
             width: 6px;
@@ -782,19 +787,20 @@ export default {
         }
         .chat-input {
             display: flex;
-            align-items: flex-end;
+            align-items: stretch;
             gap: 0;
             padding: 0;
             background: transparent;
             border-radius: 0;
             box-shadow: none;
-            width: 100%;
+            width: calc(100% + 60px);
+            margin: 0 -30px -30px;
         }
         .chat-input textarea {
             flex: 1;
             padding: 16px 90px 16px 20px;
             border: none;
-            border-radius: 20px 0 0 20px;
+            border-radius: 0 0 0 30px;
             background: rgba(255, 240, 245, 0.6);
             font-size: 1rem;
             outline: none;
@@ -845,7 +851,7 @@ export default {
             background: linear-gradient(135deg, #ff6b9d, #ff8fab);
             color: white;
             border: none;
-            border-radius: 0 20px 20px 0;
+            border-radius: 0 0 30px 0;
             font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
@@ -900,6 +906,8 @@ export default {
         .chat-input-wrapper {
             position: relative;
             flex: 1;
+            display: flex;
+            align-items: stretch;
         }
         
         .footer {
