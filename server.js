@@ -784,14 +784,15 @@ export default {
             display: flex;
             align-items: flex-end;
             gap: 0;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            width: 100%;
         }
         .chat-input textarea {
             flex: 1;
-            padding: 16px 50px 16px 20px;
+            padding: 16px 90px 16px 20px;
             border: none;
             border-radius: 20px 0 0 20px;
             background: rgba(255, 240, 245, 0.6);
@@ -804,6 +805,7 @@ export default {
             max-height: 180px;
             line-height: 1.5;
             font-family: inherit;
+            margin: 0;
         }
         .chat-input textarea:focus {
             background: rgba(255, 240, 245, 0.9);
@@ -834,7 +836,6 @@ export default {
             box-shadow: none;
         }
         .emoji-btn:hover {
-            background: rgba(255, 192, 203, 0.6);
             transform: scale(1.1);
             opacity: 1;
             box-shadow: none;
