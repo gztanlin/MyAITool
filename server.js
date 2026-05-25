@@ -791,7 +791,7 @@ export default {
         }
         .chat-input textarea {
             flex: 1;
-            padding: 16px 50px 16px 20px;
+            padding: 16px 20px 16px 50px;
             border: none;
             border-radius: 20px;
             background: rgba(255, 240, 245, 0.6);
@@ -814,7 +814,7 @@ export default {
         }
         .emoji-btn {
             position: absolute;
-            right: 12px;
+            left: 12px;
             bottom: 12px;
             padding: 6px;
             background: transparent;
