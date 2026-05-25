@@ -934,23 +934,26 @@ export default {
             border-bottom: 1px solid #ffe4ec;
         }
         .category-btn {
-            padding: 6px 10px;
-            background: rgba(255, 240, 245, 0.6);
-            border: none;
-            border-radius: 15px;
-            font-size: 1rem;
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid #ffe4ec;
+            border-radius: 12px;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
-            color: #e91e63;
-            flex: 1;
+            color: #ff6b9d;
+            flex: none;
             text-align: center;
+            min-width: 30px;
         }
         .category-btn:hover {
-            background: rgba(255, 107, 157, 0.2);
+            background: rgba(255, 240, 245, 0.8);
+            border-color: #ffc8dd;
         }
         .category-btn.active {
-            background: linear-gradient(135deg, #ff6b9d, #ff8fab);
-            color: white;
+            background: rgba(255, 107, 157, 0.15);
+            border-color: #ff6b9d;
+            color: #e91e63;
         }
         .emoji-panel.show {
             display: block;
