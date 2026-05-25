@@ -928,24 +928,24 @@ export default {
         .emoji-category-bar {
             display: flex;
             justify-content: space-between;
-            gap: 3px;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
+            gap: 2px;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
             border-bottom: 1px solid #ffe4ec;
         }
         .category-btn {
-            padding: 1px 3px;
+            padding: 0 2px;
             background: transparent;
             border: none;
             border-radius: 6px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             flex: none;
             text-align: center;
-            min-width: 18px;
-            height: 20px;
+            min-width: 16px;
+            height: 18px;
             line-height: 16px;
         }
         .category-btn:hover {
