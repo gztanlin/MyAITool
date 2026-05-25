@@ -783,15 +783,15 @@ export default {
         .chat-input {
             display: flex;
             align-items: flex-end;
-            gap: 8px;
+            gap: 0;
             padding: 8px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         .chat-input textarea {
-            flex: 2;
-            padding: 16px 20px 16px 50px;
+            flex: 1;
+            padding: 16px 50px 16px 20px;
             border: none;
             border-radius: 20px;
             background: rgba(255, 240, 245, 0.6);
