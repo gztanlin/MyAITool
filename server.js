@@ -923,40 +923,41 @@ export default {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 260px;
+            width: 220px;
         }
         .emoji-panel.show {
             display: block;
         }
-        .emoji-category-bar {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            padding: 6px 8px;
-            border-bottom: 1px solid #ffe4ec;
-            background: white;
-            border-radius: 20px 20px 0 0;
-            max-width: 100%;
-            justify-content: center;
-        }
         .emoji-panel-content {
             padding: 8px 10px;
             background: white;
+            border-radius: 20px 20px 0 0;
+        }
+        .emoji-category-bar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 2px;
+            padding: 6px 10px;
+            border-top: 1px solid #ffe4ec;
+            background: white;
             border-radius: 0 0 20px 20px;
+            overflow-x: auto;
         }
         .category-btn {
-            padding: 2px 4px;
+            padding: 2px 3px;
             background: transparent;
             border: none;
             border-radius: 3px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
-            min-width: 20px;
-            height: 20px;
-            line-height: 16px;
+            min-width: 16px;
+            height: 18px;
+            line-height: 14px;
+            flex-shrink: 0;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
@@ -1105,10 +1106,10 @@ export default {
                     <button class="emoji-btn" id="emojiBtn">😊</button>
                     <textarea id="chatInput" placeholder="输入你的心声..." rows="2"></textarea>
                     <div class="emoji-panel" id="emojiPanel">
-                        <div class="emoji-category-bar" id="emojiCategoryBar"></div>
                         <div class="emoji-panel-content">
                             <div class="emoji-grid" id="emojiGrid"></div>
                         </div>
+                        <div class="emoji-category-bar" id="emojiCategoryBar"></div>
                     </div>
                 </div>
                 <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
