@@ -923,25 +923,27 @@ export default {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 300px;
+            width: 280px;
         }
         .emoji-category-bar {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            justify-content: space-between;
+            gap: 4px;
             margin-bottom: 12px;
             padding-bottom: 10px;
             border-bottom: 1px solid #ffe4ec;
         }
         .category-btn {
-            padding: 5px 12px;
+            padding: 6px 10px;
             background: rgba(255, 240, 245, 0.6);
             border: none;
             border-radius: 15px;
-            font-size: 0.85rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #e91e63;
+            flex: 1;
+            text-align: center;
         }
         .category-btn:hover {
             background: rgba(255, 107, 157, 0.2);
@@ -960,7 +962,7 @@ export default {
         }
         .emoji-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 8px;
         }
         .emoji-item {
@@ -1173,12 +1175,12 @@ export default {
         
         // 分类表情列表
         const emojiCategories = {
-            '💕 爱心': ['💕', '💖', '💗', '💓', '💘', '💝', '💞', '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️‍🔥', '❤️‍🩹', '💟', '❣️'],
-            '😊 表情': ['😍', '🥰', '😘', '😗', '😙', '😚', '😊', '😇', '🤗', '😌', '😏', '😻', '😽', '😋', '🤤', '🤩', '🥴', '🥳'],
-            '👫 情侣': ['💋', '👩‍❤️‍👨', '👨‍❤️‍👨', '👩‍❤️‍👩', '💑', '👫', '👭', '👬', '💏', '👪', '🫂', '🤝'],
-            '🌹 鲜花': ['🌹', '🥀', '🌺', '🌸', '🌼', '🌻', '🌷', '💐'],
-            '🎊 庆祝': ['🎉', '🎊', '🎁', '🎀', '🎈', '💌', '🥂', '🍾', '🍷'],
-            '✨ 特效': ['✨', '💫', '⭐', '🌟', '💥', '🔥', '🌈', '☀️', '🌙', '🌠', '🌌', '💎', '💍']
+            '💕': ['💕', '💖', '💗', '💓', '💘', '💝', '💞', '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️‍🔥', '❤️‍🩹', '💟', '❣️'],
+            '😊': ['😍', '🥰', '😘', '😗', '😙', '😚', '😊', '😇', '🤗', '😌', '😏', '😻', '😽', '😋', '🤤', '🤩', '🥴', '🥳'],
+            '👫': ['💋', '👩‍❤️‍👨', '👨‍❤️‍👨', '👩‍❤️‍👩', '💑', '👫', '👭', '👬', '💏', '👪', '🫂', '🤝'],
+            '🌹': ['🌹', '🥀', '🌺', '🌸', '🌼', '🌻', '🌷', '💐'],
+            '🎊': ['🎉', '🎊', '🎁', '🎀', '🎈', '💌', '🥂', '🍾', '🍷'],
+            '✨': ['✨', '💫', '⭐', '🌟', '💥', '🔥', '🌈', '☀️', '🌙', '🌠', '🌌', '💎', '💍']
         };
         
         // 初始化表情面板
