@@ -814,7 +814,7 @@ export default {
         }
         .emoji-btn {
             position: absolute;
-            left: 12px;
+            right: 12px;
             bottom: 12px;
             padding: 6px;
             background: transparent;
@@ -831,11 +831,13 @@ export default {
             height: 32px;
             opacity: 0.6;
             z-index: 10;
+            box-shadow: none;
         }
         .emoji-btn:hover {
             background: rgba(255, 192, 203, 0.6);
             transform: scale(1.1);
             opacity: 1;
+            box-shadow: none;
         }
         .chat-input button {
             padding: 12px 25px;
