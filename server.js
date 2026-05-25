@@ -919,11 +919,11 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 12px;
+            padding: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 320px;
+            width: 280px;
         }
         .emoji-panel.show {
             display: flex;
@@ -932,10 +932,10 @@ export default {
         .emoji-category-bar {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding-right: 8px;
+            gap: 3px;
+            padding-right: 4px;
             border-right: 1px solid #ffe4ec;
-            min-width: 28px;
+            min-width: 22px;
             flex-shrink: 0;
         }
         .emoji-panel-content {
@@ -943,18 +943,18 @@ export default {
             overflow: auto;
         }
         .category-btn {
-            padding: 2px 4px;
+            padding: 1px;
             background: transparent;
             border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             flex: none;
             text-align: center;
-            min-width: 24px;
-            height: 24px;
+            min-width: 20px;
+            height: 22px;
             line-height: 20px;
         }
         .category-btn:hover {
