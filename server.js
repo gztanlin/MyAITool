@@ -1130,25 +1130,37 @@ export default {
         
         // 浪漫句子数组（每天随机显示一段）
         const romanticMessages = [
-            "💕 在时光长河中，你是我唯一想停靠的港湾。",
-            "\u2764\uFE0F世界很大，我的心很小，只装得下一个你\u2764\uFE0F",
-            "🌹 遇见你，是我今生最美的意外。",
-            "💝 爱是一场温柔的冒险，而你是我唯一的目的地。",
-            "✨ 你的名字，是我听过最美的情话。",
-            "🌙 愿与你一起，从心动到古稀。",
-            "💗 喜欢你，是我做过最认真的事。",
-            "🌸 余生很长，我想和你一起浪费。",
-            "💞 你是我生命中，最温暖的那束光。",
-            "🎀 爱你，是我藏在心里的秘密。",
-            "💓 你在，春华秋实夏蝉冬雪；你不在，春夏秋冬。",
-            "💘 遇见你之前，我没想过永远；遇见你之后，我没想过别人。"
+            "\u2764\uFE0F在时光长河中，你是我唯一想停靠的港湾\u2764\uFE0F",
+            "",
+            "\u2764\uFE0F遇见你，是我今生最美的意外\u2764\uFE0F",
+            "\u2764\uFE0F爱是一场温柔的冒险，而你是我唯一的目的地\u2764\uFE0F",
+            "\u2764\uFE0F你的名字，是我听过最美的情话\u2764\uFE0F",
+            "\u2764\uFE0F愿与你一起，从心动到古稀\u2764\uFE0F",
+            "\u2764\uFE0F喜欢你，是我做过最认真的事\u2764\uFE0F",
+            "\u2764\uFE0F余生很长，我想和你一起浪费\u2764\uFE0F",
+            "\u2764\uFE0F你是我生命中，最温暖的那束光\u2764\uFE0F",
+            "\u2764\uFE0F爱你，是我藏在心里的秘密\u2764\uFE0F",
+            "\u2764\uFE0F你在，春华秋实夏蝉冬雪；你不在，春夏秋冬\u2764\uFE0F",
+            "\u2764\uFE0F遇见你之前，我没想过永远；遇见你之后，我没想过别人\u2764\uFE0F"
         ];
+        
+        // 爱心表情数组（用于随机选择）
+        const heartEmojis = ['\u2764\uFE0F', '\uD83D\uDC95', '\uD83D\uDC96', '\uD83D\uDC97', '\uD83D\uDC93', '\uD83D\uDC9B', '\uD83D\uDC9A', '\uD83D\uDC98'];
         
         // 根据日期获取句子（每天一段）
         function getTodayMessage() {
             const today = new Date();
             const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-            return romanticMessages[dayOfYear % romanticMessages.length];
+            const index = dayOfYear % romanticMessages.length;
+            
+            // 如果是第二句话（索引为1），头尾随机加爱心
+            if (index === 1) {
+                const leftHeart = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                const rightHeart = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                return leftHeart + '世界很大，我的心很小，只装得下一个你' + rightHeart;
+            }
+            
+            return romanticMessages[index];
         }
         
         // 计算从2018年2月24日到今天的天数
