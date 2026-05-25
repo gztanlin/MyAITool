@@ -919,32 +919,31 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 10px;
+            padding: 0;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 280px;
-            min-height: 220px;
-            position: relative;
+            width: 270px;
+            min-height: 200px;
         }
         .emoji-panel.show {
-            display: block;
+            display: flex;
         }
         .emoji-category-bar {
-            position: absolute;
-            left: 10px;
-            top: 10px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            padding-right: 6px;
+            gap: 4px;
+            padding: 10px 6px 10px 10px;
             border-right: 1px solid #ffe4ec;
-            width: 22px;
-            height: calc(100% - 20px);
+            width: 24px;
+            flex-shrink: 0;
+            background: white;
         }
         .emoji-panel-content {
-            margin-left: 38px;
-            height: calc(100% - 20px);
+            flex: 1;
+            padding: 10px;
+            background: white;
+            min-width: 0;
         }
         .category-btn {
             padding: 0;
@@ -956,13 +955,12 @@ export default {
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
-            width: 18px;
-            height: 20px;
-            line-height: 20px;
+            width: 20px;
+            height: 22px;
+            line-height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
@@ -978,11 +976,9 @@ export default {
         .emoji-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 5px;
-            padding: 4px;
+            gap: 4px;
             width: 100%;
-            height: 100%;
-            overflow-y: auto;
+            max-width: 200px;
         }
         .emoji-item {
             font-size: 1.3rem;
@@ -995,7 +991,7 @@ export default {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 30px;
+            min-height: 28px;
         }
         .emoji-item:hover {
             background: rgba(255, 107, 157, 0.1);
