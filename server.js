@@ -937,26 +937,26 @@ export default {
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
-            gap: 2px;
-            padding: 6px 10px;
+            gap: 4px;
+            padding: 4px 8px;
             border-top: 1px solid #ffe4ec;
             background: white;
             border-radius: 0 0 20px 20px;
-            overflow-x: auto;
         }
         .category-btn {
-            padding: 2px 3px;
+            padding: 0;
             background: transparent;
             border: none;
-            border-radius: 3px;
-            font-size: 0.65rem;
+            border-radius: 4px;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
-            min-width: 16px;
-            height: 18px;
-            line-height: 14px;
+            width: auto;
+            min-width: 18px;
+            height: 20px;
+            line-height: 20px;
             flex-shrink: 0;
         }
         .category-btn:hover {
