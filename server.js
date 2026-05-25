@@ -345,6 +345,59 @@ export default {
                     );
                 }
             } else if (method === 'GET') {
+                // 定时清理：每2小时清理一次2小时前已读的消息
+                const TWO_HOURS = 2 * 60 * 60 * 1000;
+                const now = Date.now();
+                
+                // 从KV获取上次清理时间
+                let lastCleanupTime = 0;
+                try {
+                    const lastCleanupStr = await chatStore.get('lq_cleanup_time');
+                    if (lastCleanupStr) {
+                        lastCleanupTime = parseInt(lastCleanupStr, 10);
+                    }
+                } catch (e) {
+                    console.log('Get last cleanup time failed:', e);
+                }
+                
+                // 如果超过2小时，执行清理
+                if (now - lastCleanupTime > TWO_HOURS) {
+                    try {
+                        const stored = await chatStore.get(CHAT_STORE_KEY);
+                        if (stored) {
+                            let messages = JSON.parse(stored);
+                            const beforeCount = messages.length;
+                            
+                            // 过滤掉：1) 超过2小时 且 2) 已被其他人阅读（readBy中有非发送者记录）
+                            messages = messages.filter(msg => {
+                                const age = now - (msg.timestamp || 0);
+                                const isOld = age > TWO_HOURS;
+                                
+                                // 检查是否已被其他人阅读
+                                let hasOtherReader = false;
+                                if (msg.readBy && typeof msg.readBy === 'object') {
+                                    const readers = Object.keys(msg.readBy);
+                                    hasOtherReader = readers.some(reader => reader !== msg.user);
+                                }
+                                
+                                // 保留条件：不是旧消息 或者 未被其他人阅读
+                                return !(isOld && hasOtherReader);
+                            });
+                            
+                            const afterCount = messages.length;
+                            if (beforeCount !== afterCount) {
+                                console.log(`Cleanup: removed ${beforeCount - afterCount} old read messages`);
+                                await chatStore.put(CHAT_STORE_KEY, JSON.stringify(messages));
+                            }
+                        }
+                        
+                        // 更新上次清理时间
+                        await chatStore.put('lq_cleanup_time', now.toString());
+                    } catch (e) {
+                        console.log('Cleanup error:', e);
+                    }
+                }
+                
                 // 获取消息（只从服务器获取，不使用本地存储）
                 let chatMessages = [];
                 let hasData = false;
@@ -370,7 +423,6 @@ export default {
                 // 获取阅读者参数
                 const urlObj = new URL(req.url, 'http://localhost');
                 const reader = urlObj.searchParams.get('reader');
-                const now = Date.now();
                 
                 let messageUpdated = false;
                 chatMessages.forEach(msg => {
