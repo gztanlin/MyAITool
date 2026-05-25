@@ -1110,7 +1110,10 @@ export default {
                     <button class="emoji-btn" id="emojiBtn">😊</button>
                     <textarea id="chatInput" placeholder="输入你的心声..." rows="2"></textarea>
                     <div class="emoji-panel" id="emojiPanel">
-                        <div class="emoji-grid" id="emojiGrid"></div>
+                        <div class="emoji-category-bar" id="emojiCategoryBar"></div>
+                        <div class="emoji-panel-content">
+                            <div class="emoji-grid" id="emojiGrid"></div>
+                        </div>
                     </div>
                 </div>
                 <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
@@ -1206,13 +1209,10 @@ export default {
         // 初始化表情面板
         function initEmojiPanel() {
             const emojiGrid = document.getElementById('emojiGrid');
+            const emojiCategoryBar = document.getElementById('emojiCategoryBar');
             const emojiBtn = document.getElementById('emojiBtn');
             const emojiPanel = document.getElementById('emojiPanel');
             const chatInput = document.getElementById('chatInput');
-            
-            // 创建分类标签容器
-            const categoryBar = document.createElement('div');
-            categoryBar.className = 'emoji-category-bar';
             
             // 获取所有分类名称
             const categories = Object.keys(emojiCategories);
@@ -1235,11 +1235,8 @@ export default {
                 if (category === activeCategory) {
                     btn.classList.add('active');
                 }
-                categoryBar.appendChild(btn);
+                emojiCategoryBar.appendChild(btn);
             });
-            
-            // 添加分类栏到面板
-            emojiPanel.insertBefore(categoryBar, emojiGrid);
             
             // 渲染表情函数
             function renderEmojis(category) {
