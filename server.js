@@ -1162,7 +1162,7 @@ export default {
         // 显示今日浪漫句子
         const days = getDaysTogether();
         const message = getTodayMessage();
-        document.getElementById('romanticText').textContent = `💕 在我们的第${days}天，我想对你说：${message}`;
+        document.getElementById('romanticText').textContent = '\u2764\uFE0F 在我们的第' + days + '天，我想对你说：' + message;
         
         // 加密密钥（简单混淆）
         const ENCRYPT_KEY = 'lqq520secret';
