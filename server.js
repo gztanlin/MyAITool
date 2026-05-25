@@ -919,31 +919,32 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 8px;
+            padding: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 250px;
-            min-height: 200px;
+            width: 280px;
+            min-height: 220px;
+            position: relative;
         }
         .emoji-panel.show {
-            display: flex;
-            gap: 6px;
+            display: block;
         }
         .emoji-category-bar {
+            position: absolute;
+            left: 10px;
+            top: 10px;
             display: flex;
             flex-direction: column;
             gap: 3px;
-            padding-right: 4px;
+            padding-right: 6px;
             border-right: 1px solid #ffe4ec;
-            width: 20px;
-            flex-shrink: 0;
+            width: 22px;
+            height: calc(100% - 20px);
         }
         .emoji-panel-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            width: calc(100% - 28px);
+            margin-left: 38px;
+            height: calc(100% - 20px);
         }
         .category-btn {
             padding: 0;
@@ -978,13 +979,15 @@ export default {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 5px;
-            padding: 2px;
+            padding: 4px;
             width: 100%;
+            height: 100%;
+            overflow-y: auto;
         }
         .emoji-item {
             font-size: 1.3rem;
             text-align: center;
-            padding: 5px 0;
+            padding: 6px 0;
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s;
@@ -992,6 +995,7 @@ export default {
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 30px;
         }
         .emoji-item:hover {
             background: rgba(255, 107, 157, 0.1);
