@@ -923,7 +923,32 @@ export default {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 280px;
+            width: 300px;
+        }
+        .emoji-category-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ffe4ec;
+        }
+        .category-btn {
+            padding: 5px 12px;
+            background: rgba(255, 240, 245, 0.6);
+            border: none;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e91e63;
+        }
+        .category-btn:hover {
+            background: rgba(255, 107, 157, 0.2);
+        }
+        .category-btn.active {
+            background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+            color: white;
         }
         .emoji-panel.show {
             display: block;
@@ -1146,24 +1171,15 @@ export default {
             localStorage.setItem('lqUserId', userId);
         }
         
-        // 浪漫主题表情列表
-        const romanticEmojis = [
-            '💕', '💖', '💗', '💓', '💘', '💝', '💞',
-            '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎',
-            '🖤', '🤍', '❤️‍🔥', '❤️‍🩹', '🌹', '🥀', '🌺',
-            '🌸', '🌼', '🌻', '🌷', '💐', '🫶', '🙈',
-            '😍', '🥰', '😘', '😗', '😙', '😚', '😊',
-            '😇', '🤗', '😌', '😏', '🥲', '😎', '🥳',
-            '🎉', '🎊', '🎁', '🎀', '🎈', '💌', '💫',
-            '✨', '💫', '⭐', '🌟', '💥', '💦', '💨',
-            '🔥', '🌈', '☀️', '🌙', '⭐', '✨', '🌟',
-            '🌠', '🌌', '💎', '💍', '🥂', '🍾', '🍷',
-            '😻', '😽', '😋', '🤤', '🤩', '🥴', '🥰',
-            '💋', '👩‍❤️‍👨', '👨‍❤️‍👨', '👩‍❤️‍👩', '💑', '👫', '👭',
-            '👬', '💏', '👪', '👨‍👩‍👧', '👨‍👩‍👧‍👦', '🫂', '🤝',
-            '💘', '💗', '💖', '💓', '💕', '💞', '💝',
-            '💟', '💢', '💔', '❣️', '💕', '💗', '💖'
-        ];
+        // 分类表情列表
+        const emojiCategories = {
+            '💕 爱心': ['💕', '💖', '💗', '💓', '💘', '💝', '💞', '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️‍🔥', '❤️‍🩹', '💟', '❣️'],
+            '😊 表情': ['😍', '🥰', '😘', '😗', '😙', '😚', '😊', '😇', '🤗', '😌', '😏', '😻', '😽', '😋', '🤤', '🤩', '🥴', '🥳'],
+            '👫 情侣': ['💋', '👩‍❤️‍👨', '👨‍❤️‍👨', '👩‍❤️‍👩', '💑', '👫', '👭', '👬', '💏', '👪', '🫂', '🤝'],
+            '🌹 鲜花': ['🌹', '🥀', '🌺', '🌸', '🌼', '🌻', '🌷', '💐'],
+            '🎊 庆祝': ['🎉', '🎊', '🎁', '🎀', '🎈', '💌', '🥂', '🍾', '🍷'],
+            '✨ 特效': ['✨', '💫', '⭐', '🌟', '💥', '🔥', '🌈', '☀️', '🌙', '🌠', '🌌', '💎', '💍']
+        };
         
         // 初始化表情面板
         function initEmojiPanel() {
@@ -1172,14 +1188,52 @@ export default {
             const emojiPanel = document.getElementById('emojiPanel');
             const chatInput = document.getElementById('chatInput');
             
-            // 渲染表情
-            romanticEmojis.forEach(emoji => {
-                const emojiItem = document.createElement('div');
-                emojiItem.className = 'emoji-item';
-                emojiItem.textContent = emoji;
-                emojiItem.onclick = () => insertEmoji(emoji);
-                emojiGrid.appendChild(emojiItem);
+            // 创建分类标签容器
+            const categoryBar = document.createElement('div');
+            categoryBar.className = 'emoji-category-bar';
+            
+            // 获取所有分类名称
+            const categories = Object.keys(emojiCategories);
+            let activeCategory = categories[0];
+            
+            // 创建分类按钮
+            categories.forEach(category => {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.textContent = category;
+                btn.onclick = () => {
+                    // 切换激活状态
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeCategory = category;
+                    // 重新渲染表情
+                    renderEmojis(category);
+                };
+                // 默认激活第一个分类
+                if (category === activeCategory) {
+                    btn.classList.add('active');
+                }
+                categoryBar.appendChild(btn);
             });
+            
+            // 添加分类栏到面板
+            emojiPanel.insertBefore(categoryBar, emojiGrid);
+            
+            // 渲染表情函数
+            function renderEmojis(category) {
+                emojiGrid.innerHTML = '';
+                const emojis = emojiCategories[category] || [];
+                emojis.forEach(emoji => {
+                    const emojiItem = document.createElement('div');
+                    emojiItem.className = 'emoji-item';
+                    emojiItem.textContent = emoji;
+                    emojiItem.onclick = () => insertEmoji(emoji);
+                    emojiGrid.appendChild(emojiItem);
+                });
+            }
+            
+            // 初始渲染第一个分类
+            renderEmojis(activeCategory);
             
             // 切换表情面板显示
             emojiBtn.onclick = (e) => {
