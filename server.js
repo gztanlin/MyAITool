@@ -936,7 +936,7 @@ export default {
         .category-btn {
             padding: 1px 3px;
             background: transparent;
-            border: 1px solid #ffe4ec;
+            border: none;
             border-radius: 6px;
             font-size: 0.7rem;
             cursor: pointer;
@@ -949,13 +949,13 @@ export default {
             line-height: 16px;
         }
         .category-btn:hover {
-            background: rgba(255, 240, 245, 0.8);
-            border-color: #ffc8dd;
+            background: transparent;
+            transform: scale(1.1);
         }
         .category-btn.active {
-            background: rgba(255, 107, 157, 0.15);
-            border-color: #ff6b9d;
+            background: transparent;
             color: #e91e63;
+            transform: scale(1.1);
         }
         .emoji-panel.show {
             display: block;
