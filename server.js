@@ -791,7 +791,7 @@ export default {
         }
         .chat-input textarea {
             flex: 2;
-            padding: 14px 20px;
+            padding: 16px 20px 16px 50px;
             border: none;
             border-radius: 20px;
             background: rgba(255, 240, 245, 0.6);
@@ -800,8 +800,8 @@ export default {
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
             transition: all 0.3s;
             resize: none;
-            min-height: 48px;
-            max-height: 120px;
+            min-height: 80px;
+            max-height: 180px;
             line-height: 1.5;
             font-family: inherit;
         }
@@ -813,23 +813,27 @@ export default {
             color: rgba(255, 107, 157, 0.5);
         }
         .emoji-btn {
-            padding: 8px;
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            padding: 6px;
             background: transparent;
             border: none;
             border-radius: 50%;
-            font-size: 1rem;
+            font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            width: 34px;
-            height: 34px;
-            opacity: 0.7;
+            width: 32px;
+            height: 32px;
+            opacity: 0.6;
+            z-index: 10;
         }
         .emoji-btn:hover {
-            background: rgba(255, 192, 203, 0.5);
+            background: rgba(255, 192, 203, 0.6);
             transform: scale(1.1);
             opacity: 1;
         }
@@ -892,6 +896,29 @@ export default {
         .chat-input-wrapper {
             position: relative;
             flex: 1;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .back-btn, .login-btn {
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.9);
+            color: #ff6b9d;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .back-btn:hover, .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.3);
+            background: white;
         }
         
         /* 响应式布局 */
@@ -974,21 +1001,28 @@ export default {
             </div>
             <div class="chat-input">
                 <div class="chat-input-wrapper">
-                    <textarea id="chatInput" placeholder="输入你的心声..." rows="1"></textarea>
+                    <button class="emoji-btn" id="emojiBtn">😊</button>
+                    <textarea id="chatInput" placeholder="输入你的心声..." rows="2"></textarea>
                     <div class="emoji-panel" id="emojiPanel">
                         <div class="emoji-grid" id="emojiGrid"></div>
                     </div>
                 </div>
-                <button class="emoji-btn" id="emojiBtn">😊</button>
                 <button id="sendBtn" onclick="sendMessage()">发送 💌</button>
             </div>
         </div>
         
         <div class="footer">
             <a href="/" class="back-btn">🏠 返回首页</a>
+            <a href="/lq" class="login-btn" onclick="logout()">🔄 重新登录</a>
         </div>
     </div>
     <script>
+        // 退出登录函数
+        function logout() {
+            document.cookie = 'lq_login=; path=/; max-age=0';
+            localStorage.removeItem('lqUserId');
+        }
+        
         // 浪漫句子数组（每天随机显示一段）
         const romanticMessages = [
             "💕 在时光长河中，你是我唯一想停靠的港湾。",
