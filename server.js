@@ -929,22 +929,22 @@ export default {
             display: flex;
             justify-content: space-between;
             gap: 4px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid #ffe4ec;
         }
         .category-btn {
-            padding: 4px 8px;
+            padding: 2px 6px;
             background: transparent;
             border: 1px solid #ffe4ec;
-            border-radius: 12px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             flex: none;
             text-align: center;
-            min-width: 30px;
+            min-width: 24px;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
