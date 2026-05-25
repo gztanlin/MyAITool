@@ -923,30 +923,27 @@ export default {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 270px;
-            min-height: 200px;
+            width: 260px;
         }
         .emoji-panel.show {
-            display: flex;
+            display: block;
         }
         .emoji-category-bar {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 4px;
-            padding: 10px 6px 10px 10px;
-            border-right: 1px solid #ffe4ec;
-            width: 24px;
-            flex-shrink: 0;
+            padding: 8px 10px;
+            border-bottom: 1px solid #ffe4ec;
             background: white;
+            border-radius: 20px 20px 0 0;
         }
         .emoji-panel-content {
-            flex: 1;
-            padding: 10px;
+            padding: 8px 10px;
             background: white;
-            min-width: 0;
+            border-radius: 0 0 20px 20px;
         }
         .category-btn {
-            padding: 0;
+            padding: 2px 4px;
             background: transparent;
             border: none;
             border-radius: 3px;
@@ -955,12 +952,9 @@ export default {
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
-            width: 20px;
-            height: 22px;
-            line-height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            line-height: 16px;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
@@ -978,7 +972,6 @@ export default {
             grid-template-columns: repeat(5, 1fr);
             gap: 4px;
             width: 100%;
-            max-width: 200px;
         }
         .emoji-item {
             font-size: 1.3rem;
@@ -991,7 +984,7 @@ export default {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 28px;
+            min-height: 32px;
         }
         .emoji-item:hover {
             background: rgba(255, 107, 157, 0.1);
