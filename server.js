@@ -1507,6 +1507,12 @@ export default {
             font-weight: 400;
             font-size: 0.875rem;
         }
+        
+        .required {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
 
         .submit-btn {
             width: 100%;
@@ -1763,8 +1769,8 @@ export default {
 
         <form id="feedbackForm">
             <div class="form-group">
-                <label>👤 您的称呼 <span class="optional">(选填)</span></label>
-                <input type="text" id="feedbackName" placeholder="请输入您的称呼...">
+                <label>👤 您的称呼 <span class="required">*</span></label>
+                <input type="text" id="feedbackName" placeholder="请输入您的称呼..." required>
             </div>
 
             <div class="form-group">
@@ -1818,9 +1824,14 @@ export default {
         async function submitFeedback(e) {
             e.preventDefault();
             
-            const name = feedbackName.value.trim() || '匿名用户';
+            const name = feedbackName.value.trim();
             const content = feedbackContent.value.trim();
 
+            if (!name) {
+                showFeedbackError('请输入您的称呼');
+                return;
+            }
+            
             if (!content) {
                 showFeedbackError('请输入留言内容');
                 return;
@@ -2442,7 +2453,7 @@ export default {
     <div class="container">
         <div class="header">
             <h1>🤖 我的 AI 助手</h1>
-            <a href="/feedback" class="header-link">💬 聊天室</a>
+            <a href="/feedback" class="header-link">💬 留言交流</a>
         </div>
 
         <div class="mode-tabs">
