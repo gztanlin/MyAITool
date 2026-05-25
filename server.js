@@ -937,8 +937,8 @@ export default {
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
-            gap: 4px;
-            padding: 4px 8px;
+            gap: 2px;
+            padding: 3px 6px;
             border-top: 1px solid #ffe4ec;
             background: white;
             border-radius: 0 0 20px 20px;
@@ -947,17 +947,16 @@ export default {
             padding: 0;
             background: transparent;
             border: none;
-            border-radius: 4px;
-            font-size: 1rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
             width: auto;
-            min-width: 18px;
-            height: 20px;
-            line-height: 20px;
-            flex-shrink: 0;
+            min-width: 16px;
+            height: 18px;
+            line-height: 18px;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
