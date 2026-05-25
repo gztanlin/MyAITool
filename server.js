@@ -923,7 +923,7 @@ export default {
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 260px;
+            width: 280px;
         }
         .emoji-panel.show {
             display: flex;
@@ -936,6 +936,11 @@ export default {
             padding-right: 8px;
             border-right: 1px solid #ffe4ec;
             min-width: 28px;
+            flex-shrink: 0;
+        }
+        .emoji-panel-content {
+            flex: 1;
+            overflow: auto;
         }
         .category-btn {
             padding: 2px 4px;
@@ -966,7 +971,9 @@ export default {
         .emoji-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
         }
         .emoji-item {
             font-size: 1.5rem;
