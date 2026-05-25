@@ -919,49 +919,49 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 6px;
+            padding: 8px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 280px;
-            min-height: 180px;
-            overflow: hidden;
+            width: 250px;
+            min-height: 200px;
         }
         .emoji-panel.show {
             display: flex;
-            gap: 4px;
+            gap: 6px;
         }
         .emoji-category-bar {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            padding-right: 2px;
+            gap: 3px;
+            padding-right: 4px;
             border-right: 1px solid #ffe4ec;
-            width: 16px;
+            width: 20px;
             flex-shrink: 0;
         }
         .emoji-panel-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-width: 0;
+            width: calc(100% - 28px);
         }
         .category-btn {
             padding: 0;
             background: transparent;
             border: none;
-            border-radius: 2px;
-            font-size: 0.65rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             text-align: center;
-            width: 16px;
-            height: 18px;
-            line-height: 18px;
+            width: 18px;
+            height: 20px;
+            line-height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
@@ -977,20 +977,18 @@ export default {
         .emoji-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-            padding: 4px;
+            gap: 5px;
+            padding: 2px;
             width: 100%;
-            max-width: 220px;
         }
         .emoji-item {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             text-align: center;
-            padding: 6px 0;
+            padding: 5px 0;
             cursor: pointer;
-            border-radius: 8px;
+            border-radius: 6px;
             transition: all 0.2s;
             background: transparent;
-            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
