@@ -919,11 +919,11 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 8px;
+            padding: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 280px;
+            width: 320px;
         }
         .emoji-panel.show {
             display: flex;
@@ -972,8 +972,6 @@ export default {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 6px;
-            max-height: 200px;
-            overflow-y: auto;
         }
         .emoji-item {
             font-size: 1.5rem;
