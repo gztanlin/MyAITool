@@ -929,13 +929,15 @@ export default {
             display: block;
         }
         .emoji-category-bar {
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            padding: 8px 10px;
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            padding: 6px 8px;
             border-bottom: 1px solid #ffe4ec;
             background: white;
             border-radius: 20px 20px 0 0;
+            max-width: 100%;
+            justify-content: center;
         }
         .emoji-panel-content {
             padding: 8px 10px;
