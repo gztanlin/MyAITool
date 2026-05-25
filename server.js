@@ -971,7 +971,7 @@ export default {
         }
         .emoji-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(8, 1fr);
             gap: 4px;
             width: 100%;
         }
@@ -1150,8 +1150,19 @@ export default {
             return romanticMessages[dayOfYear % romanticMessages.length];
         }
         
+        // 计算从2018年2月24日到今天的天数
+        function getDaysTogether() {
+            const startDate = new Date(2018, 1, 24); // 2018年2月24日（月份从0开始）
+            const today = new Date();
+            const diffTime = today - startDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+        
         // 显示今日浪漫句子
-        document.getElementById('romanticText').textContent = getTodayMessage();
+        const days = getDaysTogether();
+        const message = getTodayMessage();
+        document.getElementById('romanticText').textContent = `💕 在我们的第${days}天，我想对你说：${message}`;
         
         // 加密密钥（简单混淆）
         const ENCRYPT_KEY = 'lqq520secret';
