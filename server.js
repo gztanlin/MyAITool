@@ -693,9 +693,6 @@ export default {
             background: rgba(255,255,255,0.95); border-radius: 30px;
             padding: 30px 30px 0; margin-top: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
         }
         .chat-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -727,11 +724,9 @@ export default {
             opacity: 0.6; cursor: not-allowed;
         }
         .chat-messages {
-            flex: 1;
-            overflow-y: auto;
+            height: 450px; overflow-y: auto;
             padding: 15px; background: rgba(255, 240, 245, 0.5);
-            border-radius: 20px;
-            min-height: 450px;
+            border-radius: 20px; margin-bottom: 20px;
         }
         .chat-messages::-webkit-scrollbar {
             width: 6px;
