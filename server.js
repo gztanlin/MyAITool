@@ -919,32 +919,32 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 15px;
+            padding: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 280px;
+            width: 240px;
         }
         .emoji-category-bar {
             display: flex;
             justify-content: space-between;
-            gap: 4px;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
+            gap: 2px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
             border-bottom: 1px solid #ffe4ec;
         }
         .category-btn {
-            padding: 2px 6px;
+            padding: 1px 4px;
             background: transparent;
             border: 1px solid #ffe4ec;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             flex: none;
             text-align: center;
-            min-width: 24px;
+            min-width: 22px;
         }
         .category-btn:hover {
             background: rgba(255, 240, 245, 0.8);
