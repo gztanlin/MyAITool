@@ -791,9 +791,9 @@ export default {
         }
         .chat-input textarea {
             flex: 1;
-            padding: 16px 20px 16px 50px;
+            padding: 16px 50px 16px 20px;
             border: none;
-            border-radius: 20px;
+            border-radius: 20px 0 0 20px;
             background: rgba(255, 240, 245, 0.6);
             font-size: 1rem;
             outline: none;
@@ -814,7 +814,7 @@ export default {
         }
         .emoji-btn {
             position: absolute;
-            left: 12px;
+            right: 12px;
             bottom: 12px;
             padding: 6px;
             background: transparent;
@@ -840,11 +840,11 @@ export default {
             box-shadow: none;
         }
         .chat-input button {
-            padding: 12px 25px;
+            padding: 16px 25px;
             background: linear-gradient(135deg, #ff6b9d, #ff8fab);
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 0 20px 20px 0;
             font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
@@ -852,6 +852,7 @@ export default {
             box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
             flex-shrink: 0;
             min-width: 70px;
+            margin-left: -1px;
         }
         .chat-input button:hover {
             transform: translateY(-2px);
