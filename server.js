@@ -1131,7 +1131,7 @@ export default {
         // 浪漫句子数组（每天随机显示一段）
         const romanticMessages = [
             "💕 在时光长河中，你是我唯一想停靠的港湾。",
-            "💖 世界很大，我的心很小，只装得下一个你。",
+            "\u2764\uFE0F世界很大，我的心很小，只装得下一个你\u2764\uFE0F",
             "🌹 遇见你，是我今生最美的意外。",
             "💝 爱是一场温柔的冒险，而你是我唯一的目的地。",
             "✨ 你的名字，是我听过最美的情话。",
@@ -1163,7 +1163,7 @@ export default {
         // 显示今日浪漫句子
         const days = getDaysTogether();
         const message = getTodayMessage();
-        document.getElementById('romanticText').innerHTML = '<span style="display:block;text-align:left;">\u2764\uFE0F 在我们的第' + days + '天，我想对你说：</span><span style="display:block;text-align:center;margin-top:10px;">' + message + '</span>';
+        document.getElementById('romanticText').innerHTML = '<span style="display:block;text-align:left;">在\u2764\uFE0F 的第' + days + '天，我想对你说：</span><span style="display:block;text-align:center;margin-top:10px;">' + message + '</span>';
         
         // 加密密钥（简单混淆）
         const ENCRYPT_KEY = 'lqq520secret';
