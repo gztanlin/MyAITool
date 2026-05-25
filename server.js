@@ -919,47 +919,45 @@ export default {
             left: 0;
             background: white;
             border-radius: 20px;
-            padding: 10px;
+            padding: 8px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: none;
             z-index: 100;
-            width: 240px;
+            width: 260px;
+        }
+        .emoji-panel.show {
+            display: flex;
+            gap: 8px;
         }
         .emoji-category-bar {
             display: flex;
-            justify-content: space-between;
-            gap: 2px;
-            margin-bottom: 4px;
-            padding-bottom: 2px;
-            border-bottom: 1px solid #ffe4ec;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 8px;
+            border-right: 1px solid #ffe4ec;
+            min-width: 28px;
         }
         .category-btn {
-            padding: 0 2px;
+            padding: 2px 4px;
             background: transparent;
             border: none;
             border-radius: 6px;
-            font-size: 0.65rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #ff6b9d;
             flex: none;
             text-align: center;
-            min-width: 16px;
-            height: 18px;
-            line-height: 16px;
+            min-width: 24px;
+            height: 24px;
+            line-height: 20px;
         }
         .category-btn:hover {
-            background: transparent;
-            transform: scale(1.1);
+            background: rgba(255, 240, 245, 0.8);
         }
         .category-btn.active {
-            background: transparent;
+            background: rgba(255, 107, 157, 0.2);
             color: #e91e63;
-            transform: scale(1.1);
-        }
-        .emoji-panel.show {
-            display: block;
-            animation: slideUp 0.3s ease;
         }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(10px); }
